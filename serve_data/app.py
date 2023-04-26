@@ -10,6 +10,8 @@ CORS(app)
 api = Api(app)
 
 api.add_resource(Root, '/')
+api.add_resource(Root, '/history')
+api.add_resource(Root, '/forecast')
 
 if __name__ == '__main__':
     app.run()
