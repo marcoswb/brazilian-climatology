@@ -62,18 +62,22 @@ class Main:
         cities = []
         id_cities = 1
         with open(f'{self.__output_folder}/estacoes.txt', 'w', encoding=get_encoding_files()) as output_file:
+            header_columns = ['id_estacao', 'estacao', 'estado', 'latitude', 'longitude']
+            output_file.write(transform_line_write(header_columns))
             for path_file in self.__process_files:
                 with open(path_file, encoding=get_encoding_files()) as readfile:
                     readfile.readline()
 
+                    # ler informações do arquivo
                     uf = readfile.readline().replace('\n', '').upper()[4:]
                     estacao = readfile.readline().replace('\n', '').upper()[9:]
                     readfile.readline()
-
                     latitude = readfile.readline().replace('\n', '').replace(',', '.')[10:]
                     longitude = readfile.readline().replace('\n', '').replace(',', '.')[11:]
+
                     if (uf, estacao) not in cities:
-                        output_file.write(f'{id_cities}{output_separator}{estacao}{output_separator}{uf}{output_separator}{latitude}{output_separator}{longitude}\n')
+                        line_values = [str(id_cities), estacao, uf, latitude, longitude]
+                        output_file.write(transform_line_write(line_values))
                         cities.append((uf, estacao))
                         self.__id_cities[(uf, estacao)] = id_cities
                         id_cities += 1
@@ -84,28 +88,52 @@ class Main:
         grava as médias e arquivos originais limpos em arquivos
         txt
         """
-        count = 0
-        output_separator = getenv('OUTPUT_SEPARATOR')
-        with open(f'{self.__output_folder}/historico.txt', 'w', encoding=get_encoding_files()) as output_file:
-            for path_file in tqdm(self.__process_files):
-                with open(path_file, encoding=get_encoding_files()) as readfile:
-                    for index, line in enumerate(readfile.readlines()):
-                        if index == 1:
-                            uf = line.replace('\n', '').upper()[4:]
-                        elif index == 2:
-                            estacao = line.replace('\n', '').upper()[9:]
-                        elif index >= 9:
-                            id_city = self.__id_cities.get((uf, estacao))
+        max_lines = int(getenv('MAX_LINES_OUTPUT_FILES'))
+        number_lines = 0
+        number_file = 1
+        output_path = f'{self.__output_folder}/historico_{str(number_file)}.txt'
+        output_file = open(output_path, 'w', encoding=get_encoding_files())
 
-                            line = line.replace('\n', '').replace(',', '.')
-                            splited_line = line.split(get_env('INPUT_SEPARATOR'))
-                            data = dict(zip(self.__header_file, splited_line))
+        # percorrer cada arquivo que contém dados
+        for path_file in tqdm(self.__process_files):
+            # ler dados do arquivo original
+            with open(path_file, encoding=get_encoding_files()) as readfile:
+                for index, line in enumerate(readfile.readlines()):
+                    if index == 0:
+                        # gravar cabeçalho
+                        header_file = list(self.__header_file)
+                        header_file.extend(['id_estacao'])
+                        output_file.write(transform_line_write(header_file))
+                    elif index == 1:
+                        uf = line.replace('\n', '').upper()[4:]
+                    elif index == 2:
+                        estacao = line.replace('\n', '').upper()[9:]
+                    elif index >= 9:
+                        id_city = self.__id_cities.get((uf, estacao))
 
-                            data['hora'] = data.get('hora').replace(' UTC', '')
+                        # abrir arquivo de saída
+                        if number_lines > max_lines:
+                            number_file += 1
+                            output_path = f'{self.__output_folder}/historico_{str(number_file)}.txt'
+                            output_file.close()
+                            output_file = open(output_path, 'w', encoding=get_encoding_files())
+                            number_lines = 0
 
-                            output_file.write(f"{f'{output_separator}'.join(data.values())}{output_separator}{id_city}\n")
-                count += 1
-                if count == 4:
+                        # separar os dados conforme separador
+                        line = line.replace('\n', '').replace(',', '.')
+                        splited_line = line.split(get_env('INPUT_SEPARATOR'))
+                        data = dict(zip(self.__header_file, splited_line))
+
+                        data['hora'] = data.get('hora').replace(' UTC', '')
+
+                        # gravar no arquivo de saída
+                        values = list(data.values())
+                        values.extend(str(id_city))
+                        output_file.write(transform_line_write(values))
+
+                        number_lines += 1
+
+                if number_file == 3:
                     break
 
 

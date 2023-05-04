@@ -24,3 +24,10 @@ def get_env(env_name):
     load_dotenv()
     default_encoding = getenv(env_name)
     return default_encoding
+
+
+def transform_line_write(list_values):
+    output_separator = getenv('OUTPUT_SEPARATOR')
+    line_write = f'{output_separator}'.join(list_values)
+    line_write += '\n'
+    return line_write
