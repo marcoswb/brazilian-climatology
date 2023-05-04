@@ -5,6 +5,7 @@ from utils.functions import *
 
 
 process_uf = ['SC', 'RS', 'PR']
+max_number_files = 3
 
 
 class Main:
@@ -54,9 +55,18 @@ class Main:
                 if uf_file in process_uf:
                     self.__process_files.append(complete_path)
 
+    def create_folders(self):
+        """
+        Cria as pastas onde os arquivos de históricos serão salvos
+        """
+        create_directory(f'{self.__output_folder}/original')
+        create_directory(f'{self.__output_folder}/daily_averages')
+        create_directory(f'{self.__output_folder}/weekly_averages')
+        create_directory(f'{self.__output_folder}/monthly_averages')
+
     def load_cities_files(self):
         """
-        Gera um arquivo txt com as cidades que existem nos arquivos a serem processados
+        Gera um arquivo txt com as estações que existem nos arquivos a serem processados
         """
         output_separator = getenv('OUTPUT_SEPARATOR')
         cities = []
@@ -91,20 +101,20 @@ class Main:
         max_lines = int(getenv('MAX_LINES_OUTPUT_FILES'))
         number_lines = 0
         number_file = 1
-        output_path = f'{self.__output_folder}/historico_{str(number_file)}.txt'
+        output_path = f'{self.__output_folder}/original/historico_{str(number_file)}.txt'
         output_file = open(output_path, 'w', encoding=get_encoding_files())
+
+        # gravar cabeçalho inicial
+        header_file = list(self.__header_file)
+        header_file.extend(['id_estacao'])
+        output_file.write(transform_line_write(header_file))
 
         # percorrer cada arquivo que contém dados
         for path_file in tqdm(self.__process_files):
             # ler dados do arquivo original
             with open(path_file, encoding=get_encoding_files()) as readfile:
                 for index, line in enumerate(readfile.readlines()):
-                    if index == 0:
-                        # gravar cabeçalho
-                        header_file = list(self.__header_file)
-                        header_file.extend(['id_estacao'])
-                        output_file.write(transform_line_write(header_file))
-                    elif index == 1:
+                    if index == 1:
                         uf = line.replace('\n', '').upper()[4:]
                     elif index == 2:
                         estacao = line.replace('\n', '').upper()[9:]
@@ -114,10 +124,15 @@ class Main:
                         # abrir arquivo de saída
                         if number_lines > max_lines:
                             number_file += 1
-                            output_path = f'{self.__output_folder}/historico_{str(number_file)}.txt'
+                            output_path = f'{self.__output_folder}/original/historico_{str(number_file)}.txt'
                             output_file.close()
                             output_file = open(output_path, 'w', encoding=get_encoding_files())
                             number_lines = 0
+
+                            # gravar cabeçalho
+                            header_file = list(self.__header_file)
+                            header_file.extend(['id_estacao'])
+                            output_file.write(transform_line_write(header_file))
 
                         # separar os dados conforme separador
                         line = line.replace('\n', '').replace(',', '.')
@@ -133,14 +148,19 @@ class Main:
 
                         number_lines += 1
 
-                if number_file == 3:
+                if number_file == max_number_files:
                     break
 
 
 if __name__ == '__main__':
     app = Main('/home/marcos/Downloads/dados_historicos', '/home/marcos/Downloads/novos_dados')
 
-    # app.download_data()
-    app.load_files_to_process()
-    app.load_cities_files()
-    app.process_data()
+    update_history = True
+    update_forecast = True
+
+    if update_history:
+        app.download_data()
+        app.load_files_to_process()
+        app.create_folders()
+        app.load_cities_files()
+        app.process_data()

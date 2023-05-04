@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
-from os import getenv
+from os import getenv, mkdir
+from os.path import isdir
+from shutil import rmtree
 
 
 def get_uf_file(path_file):
@@ -31,3 +33,9 @@ def transform_line_write(list_values):
     line_write = f'{output_separator}'.join(list_values)
     line_write += '\n'
     return line_write
+
+
+def create_directory(directory_name):
+    if isdir(directory_name):
+        rmtree(directory_name)
+    mkdir(directory_name)
