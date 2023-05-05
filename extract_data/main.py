@@ -118,7 +118,7 @@ class Main:
                     elif index == 2:
                         estacao = line.replace('\n', '').upper()[9:]
                     elif index >= 9:
-                        id_city = self.__id_cities.get((uf, estacao))
+                        id_city = str(self.__id_cities.get((uf, estacao)))
 
                         # abrir arquivo de saída original
                         if number_lines['original'] > max_lines:
@@ -155,15 +155,22 @@ class Main:
 
                         # gravar no arquivo de saída original
                         values = list(data.values())
-                        values.extend(str(id_city))
+                        values.extend(id_city)
                         output_file_original.write(transform_line_write(values))
                         number_lines['original'] += 1
 
                         # gravar no arquivo de saída de médias diárias
-                        values = list(data.values())
-                        values.extend(str(id_city))
-                        output_file_daily.write(transform_line_write(values))
-                        number_lines['daily'] += 1
+                        average_daily_values = [data.get(key) for key in data.keys() if key not in ['data', 'hora']]
+                        daily_average.append(average_daily_values)
+                        if len(daily_average) == 24:
+                            average_values = [data.get('data')]
+                            average_values.extend(calc_average_values(daily_average))
+                            average_values.append(id_city)
+                            output_file_daily.write(transform_line_write(average_values))
+                            number_lines['daily'] += 1
+                            daily_average.clear()
+                            if number_lines['daily'] == 4:
+                                exit()
 
                 if number_file['original'] == max_number_files:
                     break

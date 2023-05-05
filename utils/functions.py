@@ -39,3 +39,27 @@ def create_directory(directory_name):
     if isdir(directory_name):
         rmtree(directory_name)
     mkdir(directory_name)
+
+
+def calc_average_values(list_values):
+    average = []
+    sum_values = 0
+    length_main_list = len(list_values)
+    length_sublists = len(list_values[0])
+    print('\n')
+    for i in list_values:
+        print(i)
+    for index_sublist in range(length_sublists):
+        for index_main_list in range(length_main_list):
+            sum_values += format_float(list_values[index_main_list][index_sublist])
+
+        average.append(str(round(sum_values/length_main_list, 2)))
+        sum_values = 0
+    return average
+
+
+def format_float(value):
+    try:
+        return float(value)
+    except:
+        return 0
