@@ -1,0 +1,42 @@
+original_header = [
+    'data',
+    'hora',
+    'precipitacao',
+    'pressao_atmosferica',
+    'presao_atmosferica_maxima',
+    'pressao_atmosferica_minima',
+    'radiacao_global',
+    'temperatura_ar',
+    'temperatura_ponto_orvalho',
+    'temperatura_maxima',
+    'temperatura_minima',
+    'temperatura_orvalho_maxima',
+    'temperatura_orvalho_minima',
+    'umidade_relativa_maxima',
+    'umidade_relativa_minima',
+    'umidade_relativa_ar',
+    'direcao_horaria_ventos',
+    'velocidade_maxima_ventos',
+    'velocidade_horaria_ventos'
+]
+
+daily_header = [
+    'data',
+    'precipitacao',
+    'pressao_atmosferica',
+    'presao_atmosferica_maxima',
+    'pressao_atmosferica_minima',
+    'radiacao_global',
+    'temperatura_ar',
+    'temperatura_ponto_orvalho',
+    'temperatura_maxima',
+    'temperatura_minima',
+    'temperatura_orvalho_maxima',
+    'temperatura_orvalho_minima',
+    'umidade_relativa_maxima',
+    'umidade_relativa_minima',
+    'umidade_relativa_ar',
+    'direcao_horaria_ventos',
+    'velocidade_maxima_ventos',
+    'velocidade_horaria_ventos'
+]

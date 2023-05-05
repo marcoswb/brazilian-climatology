@@ -2,7 +2,7 @@ from os import listdir
 from tqdm import tqdm
 
 from utils.functions import *
-
+import utils.shared as shared
 
 process_uf = ['SC', 'RS', 'PR']
 max_number_files = 3
@@ -15,25 +15,6 @@ class Main:
         self.__output_folder = output_folder
         self.__id_cities = {}
         self.__process_files = []
-        self.__header_file = ['data',
-                              'hora',
-                              'precipitacao',
-                              'pressao_atmosferica',
-                              'presao_atmosferica_maxima',
-                              'pressao_atmosferica_minima',
-                              'radiacao_global',
-                              'temperatura_ar',
-                              'temperatura_ponto_orvalho',
-                              'temperatura_maxima',
-                              'temperatura_minima',
-                              'temperatura_orvalho_maxima',
-                              'temperatura_orvalho_minima',
-                              'umidade_relativa_maxima',
-                              'umidade_relativa_minima',
-                              'umidade_relativa_ar',
-                              'direcao_horaria_ventos',
-                              'velocidade_maxima_ventos',
-                              'velocidade_horaria_ventos']
 
     @staticmethod
     def download_data():
@@ -99,15 +80,33 @@ class Main:
         txt
         """
         max_lines = int(getenv('MAX_LINES_OUTPUT_FILES'))
-        number_lines = 0
-        number_file = 1
-        output_path = f'{self.__output_folder}/original/historico_{str(number_file)}.txt'
-        output_file = open(output_path, 'w', encoding=get_encoding_files())
+        number_lines = {
+            'original': 1,
+            'daily': 1
+        }
+        number_file = {
+            'original': 1,
+            'daily': 1
+        }
+        daily_average = []
 
-        # gravar cabeçalho inicial
-        header_file = list(self.__header_file)
+        # caminhos dos arquivos
+        output_path_original = f"{self.__output_folder}/original/historico_{str(number_file['original'])}.txt"
+        output_path_daily = f"{self.__output_folder}/daily_averages/historico_{str(number_file['original'])}.txt"
+
+        # arquivos para escrever
+        output_file_original = open(output_path_original, 'w', encoding=get_encoding_files())
+        output_file_daily = open(output_path_daily, 'w', encoding=get_encoding_files())
+
+        # gravar cabeçalho inicial no arquivo original
+        header_file = list(shared.original_header)
         header_file.extend(['id_estacao'])
-        output_file.write(transform_line_write(header_file))
+        output_file_original.write(transform_line_write(header_file))
+
+        # gravar cabeçalho inicial no arquivo de média diária
+        header_file = list(shared.daily_header)
+        header_file.extend(['id_estacao'])
+        output_file_daily.write(transform_line_write(header_file))
 
         # percorrer cada arquivo que contém dados
         for path_file in tqdm(self.__process_files):
@@ -121,34 +120,52 @@ class Main:
                     elif index >= 9:
                         id_city = self.__id_cities.get((uf, estacao))
 
-                        # abrir arquivo de saída
-                        if number_lines > max_lines:
-                            number_file += 1
-                            output_path = f'{self.__output_folder}/original/historico_{str(number_file)}.txt'
-                            output_file.close()
-                            output_file = open(output_path, 'w', encoding=get_encoding_files())
-                            number_lines = 0
+                        # abrir arquivo de saída original
+                        if number_lines['original'] > max_lines:
+                            number_file['original'] += 1
+                            output_path_original = f"{self.__output_folder}/original/historico_{str(number_file['original'])}.txt"
+                            output_file_original.close()
+                            output_file_original = open(output_path_original, 'w', encoding=get_encoding_files())
+                            number_lines['original'] = 0
 
-                            # gravar cabeçalho
-                            header_file = list(self.__header_file)
+                            # gravar cabeçalho no arquivo original
+                            header_file = list(shared.original_header)
                             header_file.extend(['id_estacao'])
-                            output_file.write(transform_line_write(header_file))
+                            output_file_original.write(transform_line_write(header_file))
+
+                        # abrir arquivo de saída da média diária
+                        if number_lines['daily'] > max_lines:
+                            number_file['daily'] += 1
+                            output_path_daily = f"{self.__output_folder}/daily_averages/historico_{str(number_file['daily'])}.txt"
+                            output_file_daily.close()
+                            output_file_daily = open(output_path_daily, 'w', encoding=get_encoding_files())
+                            number_lines['daily'] = 0
+
+                            # gravar cabeçalho no arquivo original
+                            header_file = list(shared.daily_header)
+                            header_file.extend(['id_estacao'])
+                            output_file_daily.write(transform_line_write(header_file))
 
                         # separar os dados conforme separador
                         line = line.replace('\n', '').replace(',', '.')
                         splited_line = line.split(get_env('INPUT_SEPARATOR'))
-                        data = dict(zip(self.__header_file, splited_line))
+                        data = dict(zip(shared.original_header, splited_line))
 
                         data['hora'] = data.get('hora').replace(' UTC', '')
 
-                        # gravar no arquivo de saída
+                        # gravar no arquivo de saída original
                         values = list(data.values())
                         values.extend(str(id_city))
-                        output_file.write(transform_line_write(values))
+                        output_file_original.write(transform_line_write(values))
+                        number_lines['original'] += 1
 
-                        number_lines += 1
+                        # gravar no arquivo de saída de médias diárias
+                        values = list(data.values())
+                        values.extend(str(id_city))
+                        output_file_daily.write(transform_line_write(values))
+                        number_lines['daily'] += 1
 
-                if number_file == max_number_files:
+                if number_file['original'] == max_number_files:
                     break
 
 
