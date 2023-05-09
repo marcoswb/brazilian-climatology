@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from os import getenv, mkdir
 from os.path import isdir
 from shutil import rmtree
+from datetime import datetime, timedelta
 
 
 def get_uf_file(path_file):
@@ -63,3 +64,31 @@ def format_float(value):
         return float(value)
     except:
         return 0
+
+
+def convert_date_format(date, format_date='%Y/%m/%d'):
+    try:
+        new_date = datetime.strptime(date, format_date)
+        return new_date
+    except:
+        return None
+
+
+def separate_date(date):
+    converted_date = convert_date_format(date)
+    if converted_date:
+        year = converted_date.year
+        month = converted_date.month
+        day = converted_date.day
+        return year, month, day
+    else:
+        return [None, None, None]
+
+
+def get_competence(date):
+    converted_date = convert_date_format(date)
+    if converted_date:
+        competence = converted_date.replace(day=1)
+        return competence.strftime('%Y/%m/%d')
+    else:
+        return None

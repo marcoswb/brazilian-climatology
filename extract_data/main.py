@@ -15,6 +15,7 @@ class Main:
         self.__output_folder = output_folder
         self.__id_cities = {}
         self.__process_files = []
+        self.data = {}
 
     @staticmethod
     def download_data():
@@ -80,33 +81,41 @@ class Main:
         txt
         """
         max_lines = int(getenv('MAX_LINES_OUTPUT_FILES'))
-        number_lines = {
-            'original': 1,
-            'daily': 1
+        self.data = {
+            'number_lines': {
+                'original': 1,
+                'daily': 1,
+                'weekly': 1,
+                'monthly': 1
+            },
+            'number_file': {
+                'original': 1,
+                'daily': 1,
+                'weekly': 1,
+                'monthly': 1
+            },
+            'daily_average': [],
+            'weekly_average': [],
+            'monthly_average': []
         }
-        number_file = {
-            'original': 1,
-            'daily': 1
-        }
-        daily_average = []
 
         # caminhos dos arquivos
-        output_path_original = f"{self.__output_folder}/original/historico_{str(number_file['original'])}.txt"
-        output_path_daily = f"{self.__output_folder}/daily_averages/historico_{str(number_file['original'])}.txt"
+        output_path_original = self.get_name_file('original')
+        output_path_daily = self.get_name_file('daily')
+        output_path_weekly = self.get_name_file('weekly')
+        output_path_monthly = self.get_name_file('monthly')
 
         # arquivos para escrever
         output_file_original = open(output_path_original, 'w', encoding=get_encoding_files())
         output_file_daily = open(output_path_daily, 'w', encoding=get_encoding_files())
+        output_file_weekly = open(output_path_weekly, 'w', encoding=get_encoding_files())
+        output_file_monthly = open(output_path_monthly, 'w', encoding=get_encoding_files())
 
-        # gravar cabeçalho inicial no arquivo original
-        header_file = list(shared.original_header)
-        header_file.extend(['id_estacao'])
-        output_file_original.write(transform_line_write(header_file))
-
-        # gravar cabeçalho inicial no arquivo de média diária
-        header_file = list(shared.daily_header)
-        header_file.extend(['id_estacao'])
-        output_file_daily.write(transform_line_write(header_file))
+        # gravar cabeçalhos
+        self.print_header('original', output_file_original)
+        self.print_header('daily', output_file_daily)
+        self.print_header('weekly', output_file_weekly)
+        self.print_header('monthly', output_file_monthly)
 
         # percorrer cada arquivo que contém dados
         for path_file in tqdm(self.__process_files):
@@ -120,60 +129,124 @@ class Main:
                     elif index >= 9:
                         id_city = str(self.__id_cities.get((uf, estacao)))
 
-                        # abrir arquivo de saída original
-                        if number_lines['original'] > max_lines:
-                            number_file['original'] += 1
-                            output_path_original = f"{self.__output_folder}/original/historico_{str(number_file['original'])}.txt"
+                        # abrir arquivo de saída original e gravar cabeçalho
+                        if self.data.get('number_lines').get('original') > max_lines:
+                            self.data['number_file']['original'] += 1
+                            self.data['number_lines']['original'] = 0
                             output_file_original.close()
-                            output_file_original = open(output_path_original, 'w', encoding=get_encoding_files())
-                            number_lines['original'] = 0
+                            output_file_original = open(self.get_name_file('original'), 'w', encoding=get_encoding_files())
+                            self.print_header('original', output_file_original)
 
-                            # gravar cabeçalho no arquivo original
-                            header_file = list(shared.original_header)
-                            header_file.extend(['id_estacao'])
-                            output_file_original.write(transform_line_write(header_file))
-
-                        # abrir arquivo de saída da média diária
-                        if number_lines['daily'] > max_lines:
-                            number_file['daily'] += 1
-                            output_path_daily = f"{self.__output_folder}/daily_averages/historico_{str(number_file['daily'])}.txt"
+                        # abrir arquivo de saída da média diária e gravar cabeçalho
+                        if self.data.get('number_lines').get('daily') > max_lines:
+                            self.data['number_file']['daily'] += 1
+                            self.data['number_lines']['daily'] = 0
                             output_file_daily.close()
-                            output_file_daily = open(output_path_daily, 'w', encoding=get_encoding_files())
-                            number_lines['daily'] = 0
+                            output_file_daily = open(self.get_name_file('daily'), 'w', encoding=get_encoding_files())
+                            self.print_header('daily', output_file_daily)
 
-                            # gravar cabeçalho no arquivo original
-                            header_file = list(shared.daily_header)
-                            header_file.extend(['id_estacao'])
-                            output_file_daily.write(transform_line_write(header_file))
+                        # abrir arquivo de saída da média semanal e gravar cabeçalho
+                        if self.data.get('number_lines').get('weekly') > max_lines:
+                            self.data['number_file']['weekly'] += 1
+                            self.data['number_lines']['weekly'] = 0
+                            output_file_weekly.close()
+                            output_file_weekly = open(self.get_name_file('weekly'), 'w', encoding=get_encoding_files())
+                            self.print_header('weekly', output_file_weekly)
+
+                        # abrir arquivo de saída da média mensal e gravar cabeçalho
+                        if self.data.get('number_lines').get('monthly') > max_lines:
+                            self.data['number_file']['monthly'] += 1
+                            self.data['number_lines']['monthly'] = 0
+                            output_file_monthly.close()
+                            output_file_monthly = open(self.get_name_file('monthly'), 'w', encoding=get_encoding_files())
+                            self.print_header('monthly', output_file_monthly)
 
                         # separar os dados conforme separador
-                        line = line.replace('\n', '').replace(',', '.')
-                        splited_line = line.split(get_env('INPUT_SEPARATOR'))
-                        data = dict(zip(shared.original_header, splited_line))
+                        original_line = line.replace('\n', '').replace(',', '.')
+                        splited_line = original_line.split(get_env('INPUT_SEPARATOR'))
+                        line = dict(zip(shared.original_header, splited_line))
+                        line['hora'] = line.get('hora').replace(' UTC', '')
 
-                        data['hora'] = data.get('hora').replace(' UTC', '')
-
-                        # gravar no arquivo de saída original
-                        values = list(data.values())
-                        values.extend(id_city)
+                        # gravar no arquivo de saída os dados originais
+                        values = list(line.values())
+                        values.append(id_city)
                         output_file_original.write(transform_line_write(values))
-                        number_lines['original'] += 1
+                        self.data['number_lines']['original'] += 1
 
-                        # gravar no arquivo de saída de médias diárias
-                        average_daily_values = [data.get(key) for key in data.keys() if key not in ['data', 'hora']]
-                        daily_average.append(average_daily_values)
-                        if len(daily_average) == 24:
-                            average_values = [data.get('data')]
-                            average_values.extend(calc_average_values(daily_average))
+                        # guardar só os dados que dá pra fazer média
+                        values_to_average = [line.get(key) for key in line.keys() if key not in ['data', 'hora']]
+
+                        # gravar no arquivo de saída os dados de médias diárias
+                        self.data['daily_average'].append(values_to_average)
+                        if len(self.data['daily_average']) == 24:
+                            average_values = calc_average_values(self.data['daily_average'])
+                            write_values = [line.get('data')]
+                            write_values.extend(average_values)
+                            write_values.append(id_city)
+                            output_file_daily.write(transform_line_write(write_values))
+                            self.data['number_lines']['daily'] += 1
+                            self.data['daily_average'].clear()
+
+                            # salvar média diária já calculada para calcular a média semanal
+                            self.data['weekly_average'].append(average_values)
+
+                            # salvar média diária já calculada para calcular a média mensal
+                            self.data['monthly_average'].append(average_values)
+
+                        # gravar no arquivo de saída os dados de médias semanais
+                        elif len(self.data['weekly_average']) == 7:
+                            first_day_week = self.data.get('weekly').get('init_day')
+                            write_values = [first_day_week, line.get('data')]
+                            write_values.extend(calc_average_values(self.data['weekly_average']))
+                            write_values.append(id_city)
+                            output_file_weekly.write(transform_line_write(write_values))
+                            self.data['number_lines']['weekly'] += 1
+                            self.data['weekly_average'].clear()
+
+                        # gravar no arquivo de saída os dados de médias mensais
+                        if len(self.data['monthly_average']) == 24:
+                            average_values = [get_competence(line.get('date'))]
+                            average_values.extend(calc_average_values(self.data['monthly_average']))
                             average_values.append(id_city)
                             output_file_daily.write(transform_line_write(average_values))
-                            number_lines['daily'] += 1
-                            daily_average.clear()
-                            if number_lines['daily'] == 4:
-                                exit()
+                            self.data['number_lines']['monthly'] += 1
+                            self.data['monthly_average'].clear()
 
-                if number_file['original'] == max_number_files:
+                        # salvar quando for o primeiro dia da semana
+                        if len(self.data['weekly_average']) == 1:
+                            self.data['weekly']['init_day'] = line.get('data')
+
+                if self.data.get('number_file').get('weekly') == max_number_files:
                     break
+
+    @staticmethod
+    def print_header(type_file, object_write):
+        if type_file == 'daily':
+            header = list(shared.daily_header).extend(['id_estacao'])
+        elif type_file == 'weekly':
+            header = list(shared.weekly_header).extend(['id_estacao'])
+        elif type_file == 'monthly':
+            header = list(shared.monthly_header).extend(['id_estacao'])
+        else:
+            header = list(shared.original_header).extend(['id_estacao'])
+
+        object_write.write(transform_line_write(header))
+
+    def get_name_file(self, type_file):
+        if type_file == 'daily':
+            number_file = str(self.data.get('number_file').get('daily'))
+            filename = f"{self.__output_folder}/daily/historico_{number_file}.txt"
+        elif type_file == 'weekly':
+            number_file = str(self.data.get('number_file').get('weekly'))
+            filename = f"{self.__output_folder}/weekly/historico_{number_file}.txt"
+        elif type_file == 'monthly':
+            number_file = str(self.data.get('number_file').get('monthly'))
+            filename = f"{self.__output_folder}/monthly/historico_{number_file}.txt"
+        else:
+            number_file = str(self.data.get('number_file').get('original'))
+            filename = f"{self.__output_folder}/original/historico_{number_file}.txt"
+
+        return filename
 
 
 if __name__ == '__main__':
