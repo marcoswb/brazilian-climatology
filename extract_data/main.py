@@ -5,7 +5,7 @@ from utils.functions import *
 import utils.shared as shared
 
 process_uf = ['SC', 'RS', 'PR']
-max_number_files = 3
+max_number_files = 2
 
 
 class Main:
@@ -81,6 +81,10 @@ class Main:
         txt
         """
         max_lines = int(getenv('MAX_LINES_OUTPUT_FILES'))
+        old_day = ''
+        old_competence = ''
+        old_date = ''
+        old_city = ''
         self.data = {
             'number_lines': {
                 'original': 1,
@@ -96,7 +100,10 @@ class Main:
             },
             'daily_average': [],
             'weekly_average': [],
-            'monthly_average': []
+            'monthly_average': [],
+            'weekly': {
+
+            }
         }
 
         # caminhos dos arquivos
@@ -167,81 +174,140 @@ class Main:
                         line = dict(zip(shared.original_header, splited_line))
                         line['hora'] = line.get('hora').replace(' UTC', '')
 
+                        # iniciar variavel do dia
+                        day = get_day(line.get('data'))
+                        if not old_day:
+                            old_day = str(day)
+
+                        # iniciar variavel do mês
+                        competence = get_competence(line.get('data'))
+                        if not old_competence:
+                            old_competence = str(competence)
+
+                        # iniciar variavel do código da cidade
+                        if not old_city:
+                            old_city = str(id_city)
+
                         # gravar no arquivo de saída os dados originais
                         values = list(line.values())
                         values.append(id_city)
                         output_file_original.write(transform_line_write(values))
                         self.data['number_lines']['original'] += 1
 
-                        # guardar só os dados que dá pra fazer média
+                        # limpar tudo se mudar de cidade
+                        if id_city != old_city:
+
+                            # diário
+                            if self.data['daily_average']:
+                                average_values = calc_average_values(self.data['daily_average'])
+                                write_values = [old_date]
+                                write_values.extend(average_values)
+                                write_values.append(old_city)
+                                output_file_daily.write(transform_line_write(write_values))
+                                self.data['number_lines']['daily'] += 1
+                                self.data['daily_average'].clear()
+
+                                # salvar média diária já calculada para calcular a média semanal
+                                self.data['weekly_average'].append(average_values)
+
+                                # salvar média diária já calculada para calcular a média mensal
+                                self.data['monthly_average'].append(average_values)
+
+                            # semanal
+                            if self.data['weekly_average']:
+                                first_day_week = self.data.get('weekly').get('init_day')
+                                write_values = [first_day_week, old_date]
+                                write_values.extend(calc_average_values(self.data['weekly_average']))
+                                write_values.append(id_city)
+                                output_file_weekly.write(transform_line_write(write_values))
+                                self.data['number_lines']['weekly'] += 1
+                                self.data['weekly_average'].clear()
+
+                            # mensal
+                            if self.data['monthly_average']:
+                                average_values = [old_competence]
+                                average_values.extend(calc_average_values(self.data['monthly_average']))
+                                average_values.append(old_city)
+                                output_file_monthly.write(transform_line_write(average_values))
+                                self.data['number_lines']['monthly'] += 1
+                                self.data['monthly_average'].clear()
+                        else:
+                            # média diária
+                            if day != old_day:
+                                average_values = calc_average_values(self.data['daily_average'])
+                                write_values = [old_date]
+                                write_values.extend(average_values)
+                                write_values.append(old_city)
+                                output_file_daily.write(transform_line_write(write_values))
+                                self.data['number_lines']['daily'] += 1
+                                self.data['daily_average'].clear()
+
+                                # salvar média diária já calculada para calcular a média semanal
+                                self.data['weekly_average'].append(average_values)
+
+                                # salvar média diária já calculada para calcular a média mensal
+                                self.data['monthly_average'].append(average_values)
+
+                            # média semanal
+                            if len(self.data['weekly_average']) == 7:
+                                first_day_week = self.data.get('weekly').get('init_day')
+                                write_values = [first_day_week, line.get('data')]
+                                write_values.extend(calc_average_values(self.data['weekly_average']))
+                                write_values.append(id_city)
+                                output_file_weekly.write(transform_line_write(write_values))
+                                self.data['number_lines']['weekly'] += 1
+                                self.data['weekly_average'].clear()
+
+                            # média mensal
+                            if old_competence != competence:
+                                average_values = [old_competence]
+                                average_values.extend(calc_average_values(self.data['monthly_average']))
+                                average_values.append(old_city)
+                                output_file_monthly.write(transform_line_write(average_values))
+                                self.data['number_lines']['monthly'] += 1
+                                self.data['monthly_average'].clear()
+
+                        # salvar dados para médias diárias
                         values_to_average = [line.get(key) for key in line.keys() if key not in ['data', 'hora']]
-
-                        # gravar no arquivo de saída os dados de médias diárias
                         self.data['daily_average'].append(values_to_average)
-                        if len(self.data['daily_average']) == 24:
-                            average_values = calc_average_values(self.data['daily_average'])
-                            write_values = [line.get('data')]
-                            write_values.extend(average_values)
-                            write_values.append(id_city)
-                            output_file_daily.write(transform_line_write(write_values))
-                            self.data['number_lines']['daily'] += 1
-                            self.data['daily_average'].clear()
-
-                            # salvar média diária já calculada para calcular a média semanal
-                            self.data['weekly_average'].append(average_values)
-
-                            # salvar média diária já calculada para calcular a média mensal
-                            self.data['monthly_average'].append(average_values)
-
-                        # gravar no arquivo de saída os dados de médias semanais
-                        elif len(self.data['weekly_average']) == 7:
-                            first_day_week = self.data.get('weekly').get('init_day')
-                            write_values = [first_day_week, line.get('data')]
-                            write_values.extend(calc_average_values(self.data['weekly_average']))
-                            write_values.append(id_city)
-                            output_file_weekly.write(transform_line_write(write_values))
-                            self.data['number_lines']['weekly'] += 1
-                            self.data['weekly_average'].clear()
-
-                        # gravar no arquivo de saída os dados de médias mensais
-                        if len(self.data['monthly_average']) == 24:
-                            average_values = [get_competence(line.get('date'))]
-                            average_values.extend(calc_average_values(self.data['monthly_average']))
-                            average_values.append(id_city)
-                            output_file_daily.write(transform_line_write(average_values))
-                            self.data['number_lines']['monthly'] += 1
-                            self.data['monthly_average'].clear()
 
                         # salvar quando for o primeiro dia da semana
-                        if len(self.data['weekly_average']) == 1:
+                        if len(self.data['weekly_average']) == 0:
                             self.data['weekly']['init_day'] = line.get('data')
 
-                if self.data.get('number_file').get('weekly') == max_number_files:
+                        # salvar dados do registro
+                        old_day = str(day)
+                        old_competence = str(competence)
+                        old_date = str(line.get('data'))
+                        old_city = str(id_city)
+
+                if self.data.get('number_file').get('monthly') == max_number_files:
                     break
 
     @staticmethod
     def print_header(type_file, object_write):
         if type_file == 'daily':
-            header = list(shared.daily_header).extend(['id_estacao'])
+            header = list(shared.daily_header)
         elif type_file == 'weekly':
-            header = list(shared.weekly_header).extend(['id_estacao'])
+            header = list(shared.weekly_header)
         elif type_file == 'monthly':
-            header = list(shared.monthly_header).extend(['id_estacao'])
+            header = list(shared.monthly_header)
         else:
-            header = list(shared.original_header).extend(['id_estacao'])
+            header = list(shared.original_header)
 
+        header.extend(['id_estacao'])
         object_write.write(transform_line_write(header))
 
     def get_name_file(self, type_file):
         if type_file == 'daily':
             number_file = str(self.data.get('number_file').get('daily'))
-            filename = f"{self.__output_folder}/daily/historico_{number_file}.txt"
+            filename = f"{self.__output_folder}/daily_averages/historico_{number_file}.txt"
         elif type_file == 'weekly':
             number_file = str(self.data.get('number_file').get('weekly'))
-            filename = f"{self.__output_folder}/weekly/historico_{number_file}.txt"
+            filename = f"{self.__output_folder}/weekly_averages/historico_{number_file}.txt"
         elif type_file == 'monthly':
             number_file = str(self.data.get('number_file').get('monthly'))
-            filename = f"{self.__output_folder}/monthly/historico_{number_file}.txt"
+            filename = f"{self.__output_folder}/monthly_averages/historico_{number_file}.txt"
         else:
             number_file = str(self.data.get('number_file').get('original'))
             filename = f"{self.__output_folder}/original/historico_{number_file}.txt"

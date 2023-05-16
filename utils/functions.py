@@ -47,9 +47,6 @@ def calc_average_values(list_values):
     sum_values = 0
     length_main_list = len(list_values)
     length_sublists = len(list_values[0])
-    print('\n')
-    for i in list_values:
-        print(i)
     for index_sublist in range(length_sublists):
         for index_main_list in range(length_main_list):
             sum_values += format_float(list_values[index_main_list][index_sublist])
@@ -92,3 +89,19 @@ def get_competence(date):
         return competence.strftime('%Y/%m/%d')
     else:
         return None
+
+
+def get_month(str_date):
+    converted_date = convert_date_format(str_date)
+    if converted_date:
+        return str(converted_date.month)
+    else:
+        return ''
+
+
+def get_day(str_date):
+    converted_date = convert_date_format(str_date)
+    if converted_date:
+        return str(converted_date.day)
+    else:
+        return ''
