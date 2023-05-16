@@ -105,3 +105,17 @@ def get_day(str_date):
         return str(converted_date.day)
     else:
         return ''
+
+
+def get_first_and_last_day_week(str_date):
+    converted_date = convert_date_format(str_date)
+    number_days = timedelta(days=converted_date.weekday() + 1)
+
+    if number_days.days == 7:
+        start = converted_date
+        end = start + timedelta(days=6)
+    else:
+        start = converted_date - timedelta(days=converted_date.weekday() + 1)
+        end = start + timedelta(days=6)
+
+    return str(start.strftime('%Y/%m/%d')), str(end.strftime('%Y/%m/%d'))

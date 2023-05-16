@@ -82,6 +82,8 @@ class Main:
         """
         max_lines = int(getenv('MAX_LINES_OUTPUT_FILES'))
         old_day = ''
+        old_first_day_week = ''
+        old_last_day_week = ''
         old_competence = ''
         old_date = ''
         old_city = ''
@@ -100,10 +102,7 @@ class Main:
             },
             'daily_average': [],
             'weekly_average': [],
-            'monthly_average': [],
-            'weekly': {
-
-            }
+            'monthly_average': []
         }
 
         # caminhos dos arquivos
@@ -179,6 +178,12 @@ class Main:
                         if not old_day:
                             old_day = str(day)
 
+                        # iniciar variáveis da semana
+                        first_day_week, last_day_week = get_first_and_last_day_week(line.get('data'))
+                        if not old_first_day_week:
+                            old_first_day_week = str(first_day_week)
+                            old_last_day_week = str(last_day_week)
+
                         # iniciar variavel do mês
                         competence = get_competence(line.get('data'))
                         if not old_competence:
@@ -215,10 +220,9 @@ class Main:
 
                             # semanal
                             if self.data['weekly_average']:
-                                first_day_week = self.data.get('weekly').get('init_day')
-                                write_values = [first_day_week, old_date]
+                                write_values = [old_first_day_week, old_date]
                                 write_values.extend(calc_average_values(self.data['weekly_average']))
-                                write_values.append(id_city)
+                                write_values.append(old_city)
                                 output_file_weekly.write(transform_line_write(write_values))
                                 self.data['number_lines']['weekly'] += 1
                                 self.data['weekly_average'].clear()
@@ -249,11 +253,11 @@ class Main:
                                 self.data['monthly_average'].append(average_values)
 
                             # média semanal
-                            if len(self.data['weekly_average']) == 7:
-                                first_day_week = self.data.get('weekly').get('init_day')
-                                write_values = [first_day_week, line.get('data')]
+                            if first_day_week != old_first_day_week:
+
+                                write_values = [old_first_day_week, old_date]
                                 write_values.extend(calc_average_values(self.data['weekly_average']))
-                                write_values.append(id_city)
+                                write_values.append(old_city)
                                 output_file_weekly.write(transform_line_write(write_values))
                                 self.data['number_lines']['weekly'] += 1
                                 self.data['weekly_average'].clear()
@@ -271,12 +275,10 @@ class Main:
                         values_to_average = [line.get(key) for key in line.keys() if key not in ['data', 'hora']]
                         self.data['daily_average'].append(values_to_average)
 
-                        # salvar quando for o primeiro dia da semana
-                        if len(self.data['weekly_average']) == 0:
-                            self.data['weekly']['init_day'] = line.get('data')
-
                         # salvar dados do registro
                         old_day = str(day)
+                        old_first_day_week = str(first_day_week)
+                        old_last_day_week = str(last_day_week)
                         old_competence = str(competence)
                         old_date = str(line.get('data'))
                         old_city = str(id_city)
