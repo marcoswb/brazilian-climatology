@@ -316,18 +316,66 @@ class Main:
 
         return filename
 
-    def get_code_cities_forecast(self):
+    def get_cities_forecast(self):
         """
-        Retorna o código das cidades dentro dos estados que vão ser processados
+        Retorna as latitudes e longitudes a serem processadas
         """
         cities = []
-        xml_result = requests.get(f"{get_env('BASE_URL')}/listaCidades")
-        data = xmltodict.parse(xml_result.text)
-        for line in data.get('cidades').get('cidade'):
-            if line.get('uf') in process_uf:
-                cities.append(line.get('id'))
+        id_cities = 1
+
+        cidade = 'florianópolis'
+        estado = 'sc'
+        params = {
+            'address': f'{cidade}, {estado}',
+            'key': get_env('API_KEY_GEOCODING')
+        }
+
+        response = requests.get(get_env('BASE_URL_GEOCODING'), params=params)
+        data = response.json()
+
+        # Extrair a latitude e longitude da resposta da API
+        if data['status'] == 'OK':
+            result = data['results'][0]
+            location = result['geometry']['location']
+            latitude = location['lat']
+            longitude = location['lng']
+            cities.append([latitude, longitude, id_cities])
+            id_cities += 1
 
         return cities
+
+    def get_data_forecast_cities(self, cities):
+        """
+        Buscar dados de previsão do tempo das cidades
+        """
+        result_data = []
+
+        # previsão dos próximos 7 dias
+        for latitude_float, longitude_float, id_city in cities:
+            latitude = format(latitude_float, '.2f')
+            longitude = format(longitude_float, '.2f')
+            result_xml = requests.get(f"{get_env('BASE_URL_CPTEC')}/cidade/7dias/{latitude}/{longitude}/previsaoLatLon.xml").text
+            data = xmltodict.parse(result_xml)
+
+            for line in data.get('cidade').get('previsao'):
+                data_append = list(line.values())
+                data_append.append(id_city)
+                result_data.append(data_append)
+
+        # previsão dos 7 dias posteriores
+        for latitude_float, longitude_float, id_city in cities:
+            latitude = str(latitude_float).format('.2f')
+            longitude = str(longitude_float).format('.2f')
+            result_xml = requests.get(f"{get_env('BASE_URL_CPTEC')}/cidade/{latitude}/{longitude}/estendidaLatLon.xml").text
+            data = xmltodict.parse(result_xml)
+
+            for line in data.get('cidade').get('previsao'):
+                data_append = list(line.values())
+                data_append.append('')
+                data_append.append(id_city)
+                result_data.append(data_append)
+
+        return result_data
 
     def process_history_data(self):
         """
@@ -343,8 +391,9 @@ class Main:
         """
         Processar dados de previsão do tempo
         """
-        cities = self.get_code_cities_forecast()
-        print(cities)
+        cities = self.get_cities_forecast()
+        data = self.get_data_forecast_cities(cities)
+        print(data)
 
 
 if __name__ == '__main__':
