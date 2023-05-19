@@ -5,6 +5,7 @@ import xmltodict
 
 from utils.functions import *
 import utils.shared as shared
+from classes.CustomHttpAdapter import get_legacy_session
 
 process_uf = ['SC', 'RS', 'PR']
 max_number_files = 2
@@ -316,31 +317,43 @@ class Main:
 
         return filename
 
-    def get_cities_forecast(self):
+    def get_cities_uf(self):
+        """
+        Retorna a lista de municipios de cada estado que será processado
+        """
+        counties = []
+        for uf in process_uf:
+            response = get_legacy_session().get(f"{get_env('BASE_URL_IBGE')}/localidades/estados/{uf}/distritos")
+            for line in response.json():
+                county = line.get('municipio').get('nome')
+                counties.append([county, uf])
+
+        return counties
+
+    def get_cities_forecast(self, counties):
         """
         Retorna as latitudes e longitudes a serem processadas
         """
         cities = []
         id_cities = 1
 
-        cidade = 'florianópolis'
-        estado = 'sc'
-        params = {
-            'address': f'{cidade}, {estado}',
-            'key': get_env('API_KEY_GEOCODING')
-        }
+        for county, uf in counties:
+            params = {
+                'address': f'{county}, {uf}',
+                'key': get_env('API_KEY_GEOCODING')
+            }
 
-        response = requests.get(get_env('BASE_URL_GEOCODING'), params=params)
-        data = response.json()
+            response = requests.get(get_env('BASE_URL_GEOCODING'), params=params)
+            data = response.json()
 
-        # Extrair a latitude e longitude da resposta da API
-        if data['status'] == 'OK':
-            result = data['results'][0]
-            location = result['geometry']['location']
-            latitude = location['lat']
-            longitude = location['lng']
-            cities.append([latitude, longitude, id_cities])
-            id_cities += 1
+            # Extrair a latitude e longitude da resposta da API
+            if data['status'] == 'OK':
+                result = data['results'][0]
+                location = result['geometry']['location']
+                latitude = location['lat']
+                longitude = location['lng']
+                cities.append([latitude, longitude, id_cities])
+                id_cities += 1
 
         return cities
 
@@ -391,7 +404,8 @@ class Main:
         """
         Processar dados de previsão do tempo
         """
-        cities = self.get_cities_forecast()
+        counties = self.get_cities_uf()
+        cities = self.get_cities_forecast(counties)
         data = self.get_data_forecast_cities(cities)
         print(data)
 

@@ -1,11 +1,9 @@
-url = 'https://servicodados.ibge.gov.br/api/v1/localidades/estados/SC/municipios'
-
 import requests
 import urllib3
 import ssl
 
 
-class CustomHttpAdapter (requests.adapters.HTTPAdapter):
+class CustomHttpAdapter(requests.adapters.HTTPAdapter):
     # "Transport adapter" that allows us to use custom ssl_context.
 
     def __init__(self, ssl_context=None, **kwargs):
@@ -24,5 +22,3 @@ def get_legacy_session():
     session = requests.session()
     session.mount('https://', CustomHttpAdapter(ctx))
     return session
-
-print(get_legacy_session().get(url).json())
