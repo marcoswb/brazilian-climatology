@@ -1,5 +1,7 @@
 from os import listdir
 from tqdm import tqdm
+import requests
+import xmltodict
 
 from utils.functions import *
 import utils.shared as shared
@@ -83,7 +85,6 @@ class Main:
         max_lines = int(getenv('MAX_LINES_OUTPUT_FILES'))
         old_day = ''
         old_first_day_week = ''
-        old_last_day_week = ''
         old_competence = ''
         old_date = ''
         old_city = ''
@@ -182,7 +183,6 @@ class Main:
                         first_day_week, last_day_week = get_first_and_last_day_week(line.get('data'))
                         if not old_first_day_week:
                             old_first_day_week = str(first_day_week)
-                            old_last_day_week = str(last_day_week)
 
                         # iniciar variavel do mês
                         competence = get_competence(line.get('data'))
@@ -316,16 +316,45 @@ class Main:
 
         return filename
 
+    def get_code_cities_forecast(self):
+        """
+        Retorna o código das cidades dentro dos estados que vão ser processados
+        """
+        cities = []
+        xml_result = requests.get(f"{get_env('BASE_URL')}/listaCidades")
+        data = xmltodict.parse(xml_result.text)
+        for line in data.get('cidades').get('cidade'):
+            if line.get('uf') in process_uf:
+                cities.append(line.get('id'))
+
+        return cities
+
+    def process_history_data(self):
+        """
+        Processar dados históricos
+        """
+        self.download_data()
+        self.load_files_to_process()
+        self.create_folders()
+        self.load_cities_files()
+        self.process_data()
+
+    def process_forecast_data(self):
+        """
+        Processar dados de previsão do tempo
+        """
+        cities = self.get_code_cities_forecast()
+        print(cities)
+
 
 if __name__ == '__main__':
     app = Main('/home/marcos/Downloads/dados_historicos', '/home/marcos/Downloads/novos_dados')
 
-    update_history = True
+    update_history = False
     update_forecast = True
 
     if update_history:
-        app.download_data()
-        app.load_files_to_process()
-        app.create_folders()
-        app.load_cities_files()
-        app.process_data()
+        app.process_history_data()
+
+    if update_forecast:
+        app.process_forecast_data()
