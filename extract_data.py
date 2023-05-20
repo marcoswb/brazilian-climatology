@@ -3,7 +3,7 @@ from extract_data.process_forecast import ProcessForecast
 
 update_history = False
 update_forecast = True
-load_counties = True
+load_counties = False
 path_input = '/home/marcos/Downloads/dados_historicos'
 path_output = '/home/marcos/Downloads/novos_dados'
 

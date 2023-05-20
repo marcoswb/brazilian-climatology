@@ -1,5 +1,6 @@
 import requests
 import xmltodict
+from tqdm import tqdm
 
 from utils.functions import *
 from classes.CustomHttpAdapter import get_legacy_session
@@ -19,43 +20,40 @@ class ProcessForecast:
         self.data = {}
 
     @staticmethod
-    def get_cities_uf(load_counties):
+    def get_cities_uf():
         """
-        Retorna a lista de municipios de cada estado que será processado
+        Buscar a lista de municipios que cada estado possui
         """
-        counties = []
-        if load_counties:
-            # consultar os registros já salvos no banco
-            result = Cidades().select().dicts()
-            for line in result:
-                counties.append([line.get('cidade'), line.get('estado')])
-        else:
-            # limpar tabela de cidades
-            Cidades().init()
+        # limpar tabela de cidades
+        City().init()
 
-            # busca todas as cidades do estado com base na API do IBGE
-            for uf in process_uf:
-                response = get_legacy_session().get(f"{get_env('BASE_URL_IBGE')}/localidades/estados/{uf}/distritos")
-                for line in response.json():
-                    county = line.get('nome')
-                    counties.append([county, uf])
+        # busca todas as cidades do estado com base na API do IBGE
+        for uf in process_uf:
+            response = get_legacy_session().get(f"{get_env('BASE_URL_IBGE')}/localidades/estados/{uf}/distritos")
+            for line in response.json():
+                city = line.get('nome')
 
-                    # salvar os dados no banco
-                    register = Cidades(cidade=county, estado=uf)
-                    register.save()
+                # salvar o registro no banco de dados
+                register = City(city=city, state=uf)
+                register.save()
 
-        return counties
-
-    def get_cities_forecast(self, counties):
+    @staticmethod
+    def get_cities_forecast():
         """
-        Retorna as latitudes e longitudes a serem processadas
+        Buscar latitude e longitude das cidades
         """
-        cities = []
-        id_cities = 1
+        # Limpar tabela de posições
+        PositionCity().init()
 
-        for county, uf in counties:
+        # extrair latitudes e longitudes da API do Google Maps
+        result = City().select().dicts()
+        for line in tqdm(result):
+            id_city = line.get('id')
+            city = line.get('city')
+            state = line.get('state')
+
             params = {
-                'address': f'{county}, {uf}',
+                'address': f'{city}, {state}',
                 'key': get_env('API_KEY_GEOCODING')
             }
 
@@ -66,14 +64,14 @@ class ProcessForecast:
             if data['status'] == 'OK':
                 result = data['results'][0]
                 location = result['geometry']['location']
-                latitude = location['lat']
-                longitude = location['lng']
-                cities.append([latitude, longitude, id_cities])
-                id_cities += 1
+                latitude = format(location['lat'], '.2f')
+                longitude = format(location['lng'], '.2f')
 
-        return cities
+                # salvar o registro no banco de dados
+                register = PositionCity(latitude=latitude, longitude=longitude, id_city=id_city)
+                register.save()
 
-    def get_data_forecast_cities(self, cities):
+    def get_data_forecast_cities(self):
         """
         Buscar dados de previsão do tempo das cidades
         """
@@ -110,8 +108,9 @@ class ProcessForecast:
         """
         Processar dados de previsão do tempo
         """
-        counties = self.get_cities_uf(load_counties)
-        print(counties)
-        # cities = self.get_cities_forecast(counties)
-        # data = self.get_data_forecast_cities(cities)
-        # print(data)
+        if not load_counties:
+            self.get_cities_uf()
+            self.get_cities_forecast()
+
+        data = self.get_data_forecast_cities()
+        print(data)
