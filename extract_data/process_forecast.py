@@ -87,13 +87,15 @@ class ProcessForecast:
         # previsão dos próximos 7 dias
         executor = ThreadPoolExecutor()
         results = [executor.submit(self.get_forecast_last_seven_days, sublist) for sublist in data]
-        for future in tqdm(results):
+        print('\nProcessando previsão de 7 dias')
+        for future in results:
             future.result()
 
         # previsão estendida de mais 7 dias
         executor = ThreadPoolExecutor()
         results = [executor.submit(self.get_extended_forecast, sublist) for sublist in data]
-        for future in tqdm(results):
+        print('\nProcessando previsão estendida')
+        for future in results:
             future.result()
 
     @staticmethod
