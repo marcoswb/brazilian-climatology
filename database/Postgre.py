@@ -51,6 +51,24 @@ class Forecast(Model):
         db.create_tables([Forecast])
 
 
+class ForecastAverage(Model):
+    period_day = IntegerField()
+    weather_condition = CharField()
+    maximum_temperature = IntegerField()
+    minimum_temperature = IntegerField()
+    ultra_violet_index = FloatField(null=True)
+    id_city = IntegerField()
+
+    class Meta:
+        database = db
+        table_name = 'forecast_average'
+
+    @staticmethod
+    def init():
+        db.drop_tables([Forecast])
+        db.create_tables([Forecast])
+
+
 class WeatherType(Model):
     weather_condition = CharField()
     weather_condition_description = CharField()

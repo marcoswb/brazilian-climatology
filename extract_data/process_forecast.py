@@ -99,6 +99,9 @@ class ProcessForecast:
         for future in results:
             future.result()
 
+        # Calcular a médias das previsões
+        self.get_average_forecast()
+
     @staticmethod
     def get_forecast_last_seven_days(data):
         """
@@ -149,6 +152,12 @@ class ProcessForecast:
                     id_city=id_city)
                 register.save()
 
+    def get_average_forecast(self):
+        """
+        Calcular a médias das previsões de 7 dias e estendidas
+        """
+        pass
+
     def split_data_process(self, data):
         """
         Separa os dados em listas menores conforme o numero de threads disponíveis para processar
@@ -158,7 +167,8 @@ class ProcessForecast:
 
         return new_data
 
-    def save_types_weather_condition(self):
+    @staticmethod
+    def save_types_weather_condition():
         """
         Salvas os tipos de condição do tempo que a previsão pode ter
         """
@@ -166,7 +176,6 @@ class ProcessForecast:
         for key, value in shared.weather_condition_types.items():
             register = WeatherType(weather_condition=key, weather_condition_description=value)
             register.save()
-
 
     def process_forecast_data(self, load_counties=True):
         """
@@ -177,5 +186,4 @@ class ProcessForecast:
             self.get_cities_forecast()
             self.save_types_weather_condition()
 
-        self.save_types_weather_condition()
-        # self.get_data_forecast_cities()
+        self.get_data_forecast_cities()
