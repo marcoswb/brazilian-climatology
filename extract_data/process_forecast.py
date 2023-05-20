@@ -23,21 +23,26 @@ class ProcessForecast:
         """
         Retorna a lista de municipios de cada estado que será processado
         """
-        Cidades().init()
-
         counties = []
         if load_counties:
+            # consultar os registros já salvos no banco
+            result = Cidades().select().dicts()
+            for line in result:
+                counties.append([line.get('cidade'), line.get('estado')])
+        else:
+            # limpar tabela de cidades
+            Cidades().init()
+
+            # busca todas as cidades do estado com base na API do IBGE
             for uf in process_uf:
                 response = get_legacy_session().get(f"{get_env('BASE_URL_IBGE')}/localidades/estados/{uf}/distritos")
                 for line in response.json():
-                    county = line.get('municipio').get('nome')
+                    county = line.get('nome')
                     counties.append([county, uf])
 
+                    # salvar os dados no banco
                     register = Cidades(cidade=county, estado=uf)
                     register.save()
-        else:
-            # consultar os registros já salvos no banco
-            pass
 
         return counties
 
@@ -101,36 +106,12 @@ class ProcessForecast:
 
         return result_data
 
-    def process_history_data(self):
-        """
-        Processar dados históricos
-        """
-        self.download_data()
-        self.load_files_to_process()
-        self.create_folders()
-        self.load_cities_files()
-        self.process_data()
-
     def process_forecast_data(self, load_counties=True):
         """
         Processar dados de previsão do tempo
         """
         counties = self.get_cities_uf(load_counties)
-        print(len(counties))
+        print(counties)
         # cities = self.get_cities_forecast(counties)
         # data = self.get_data_forecast_cities(cities)
         # print(data)
-
-
-if __name__ == '__main__':
-    app = Main('/home/marcos/Downloads/dados_historicos', '/home/marcos/Downloads/novos_dados')
-
-    update_history = False
-    update_forecast = True
-    load_counties = True
-
-    if update_history:
-        app.process_history_data()
-
-    if update_forecast:
-        app.process_forecast_data(load_counties=load_counties)
