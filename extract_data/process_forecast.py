@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from utils.functions import *
 from classes.CustomHttpAdapter import get_legacy_session
 from database.Postgre import *
+import utils.shared as shared
 
 process_uf = ['SC', 'RS', 'PR']
 max_number_files = 2
@@ -100,6 +101,9 @@ class ProcessForecast:
 
     @staticmethod
     def get_forecast_last_seven_days(data):
+        """
+        Busca a previsão do tempo dos próximos 7 dias de uma lista de cidades
+        """
         for line in tqdm(data, leave=True):
             latitude = str(line.get('latitude')).replace('-', '')
             longitude = str(line.get('longitude')).replace('-', '')
@@ -122,6 +126,9 @@ class ProcessForecast:
 
     @staticmethod
     def get_extended_forecast(data):
+        """
+        Busca a previsão estendida de uma lista de cidades
+        """
         for line in tqdm(data, leave=True):
             latitude = str(line.get('latitude')).replace('-', '')
             longitude = str(line.get('longitude')).replace('-', '')
@@ -151,6 +158,16 @@ class ProcessForecast:
 
         return new_data
 
+    def save_types_weather_condition(self):
+        """
+        Salvas os tipos de condição do tempo que a previsão pode ter
+        """
+        WeatherType().init()
+        for key, value in shared.weather_condition_types.items():
+            register = WeatherType(weather_condition=key, weather_condition_description=value)
+            register.save()
+
+
     def process_forecast_data(self, load_counties=True):
         """
         Processar dados de previsão do tempo
@@ -158,5 +175,7 @@ class ProcessForecast:
         if not load_counties:
             self.get_cities_uf()
             self.get_cities_forecast()
+            self.save_types_weather_condition()
 
-        self.get_data_forecast_cities()
+        self.save_types_weather_condition()
+        # self.get_data_forecast_cities()

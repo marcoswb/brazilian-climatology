@@ -49,3 +49,17 @@ class Forecast(Model):
     def init():
         db.drop_tables([Forecast])
         db.create_tables([Forecast])
+
+
+class WeatherType(Model):
+    weather_condition = CharField()
+    weather_condition_description = CharField()
+
+    class Meta:
+        database = db
+        table_name = 'weather_type'
+
+    @staticmethod
+    def init():
+        db.drop_tables([WeatherType])
+        db.create_tables([WeatherType])
