@@ -1,6 +1,7 @@
 import requests
 import xmltodict
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
 
 from utils.functions import *
 from classes.CustomHttpAdapter import get_legacy_session
@@ -18,6 +19,7 @@ class ProcessForecast:
         self.__id_cities = {}
         self.__process_files = []
         self.data = {}
+        self.number_threads = 5
 
     @staticmethod
     def get_cities_uf():
@@ -75,34 +77,77 @@ class ProcessForecast:
         """
         Buscar dados de previsão do tempo das cidades
         """
-        result_data = []
+        # Divide a lista em listas menores para serem processadas paralelamente
+        result = PositionCity().select().order_by(PositionCity.id_city).dicts()
+        data = self.split_data_process(result)
+
+        # limpar tabela de previsão de tempo
+        Forecast().init()
 
         # previsão dos próximos 7 dias
-        for latitude_float, longitude_float, id_city in cities:
-            latitude = format(latitude_float, '.2f')
-            longitude = format(longitude_float, '.2f')
-            result_xml = requests.get(f"{get_env('BASE_URL_CPTEC')}/cidade/7dias/{latitude}/{longitude}/previsaoLatLon.xml").text
+        executor = ThreadPoolExecutor()
+        results = [executor.submit(self.get_forecast_last_seven_days, sublist) for sublist in data]
+        for future in tqdm(results):
+            future.result()
+
+        # previsão estendida de mais 7 dias
+        executor = ThreadPoolExecutor()
+        results = [executor.submit(self.get_extended_forecast, sublist) for sublist in data]
+        for future in tqdm(results):
+            future.result()
+
+    @staticmethod
+    def get_forecast_last_seven_days(data):
+        for line in tqdm(data, leave=True):
+            latitude = str(line.get('latitude')).replace('-', '')
+            longitude = str(line.get('longitude')).replace('-', '')
+            id_city = line.get('id_city')
+
+            # fazer a requisição
+            result_xml = requests.get(f"{get_env('BASE_URL_CPTEC')}/cidade/7dias/-{latitude}/-{longitude}/previsaoLatLon.xml").text
             data = xmltodict.parse(result_xml)
 
-            for line in data.get('cidade').get('previsao'):
-                data_append = list(line.values())
-                data_append.append(id_city)
-                result_data.append(data_append)
+            for forecast_line in data.get('cidade').get('previsao'):
+                # salvar o registro no banco de dados
+                register = Forecast(
+                    day=forecast_line.get('dia'),
+                    weather_condition=forecast_line.get('tempo'),
+                    maximum_temperature=forecast_line.get('maxima'),
+                    minimum_temperature=forecast_line.get('minima'),
+                    ultra_violet_index=forecast_line.get('iuv'),
+                    id_city=id_city)
+                register.save()
 
-        # previsão dos 7 dias posteriores
-        for latitude_float, longitude_float, id_city in cities:
-            latitude = str(latitude_float).format('.2f')
-            longitude = str(longitude_float).format('.2f')
+    @staticmethod
+    def get_extended_forecast(data):
+        for line in tqdm(data, leave=True):
+            latitude = str(line.get('latitude')).replace('-', '')
+            longitude = str(line.get('longitude')).replace('-', '')
+            id_city = line.get('id_city')
+
+            # fazer a requisição
             result_xml = requests.get(f"{get_env('BASE_URL_CPTEC')}/cidade/{latitude}/{longitude}/estendidaLatLon.xml").text
             data = xmltodict.parse(result_xml)
 
-            for line in data.get('cidade').get('previsao'):
-                data_append = list(line.values())
-                data_append.append('')
-                data_append.append(id_city)
-                result_data.append(data_append)
+            for forecast_line in data.get('cidade').get('previsao'):
+                # salvar o registro no banco de dados
+                register = Forecast(
+                    day=forecast_line.get('dia'),
+                    weather_condition=forecast_line.get('tempo'),
+                    maximum_temperature=forecast_line.get('maxima'),
+                    minimum_temperature=forecast_line.get('minima'),
+                    ultra_violet_index=forecast_line.get('iuv'),
+                    id_city=id_city)
+                register.save()
 
-        return result_data
+    def split_data_process(self, data):
+        """
+        Separa os dados em listas menores conforme o numero de threads disponíveis para processar
+        """
+        len_sublists = int((len(data)) / self.number_threads)
+        new_data = [data[i:i + len_sublists] for i in range(0, len(data), len_sublists)]
+
+        return new_data
 
     def process_forecast_data(self, load_counties=True):
         """
@@ -112,5 +157,4 @@ class ProcessForecast:
             self.get_cities_uf()
             self.get_cities_forecast()
 
-        data = self.get_data_forecast_cities()
-        print(data)
+        self.get_data_forecast_cities()
