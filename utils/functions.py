@@ -3,6 +3,8 @@ from os import getenv, mkdir
 from os.path import isdir
 from shutil import rmtree
 from datetime import datetime, timedelta
+from collections import Counter
+from multiprocessing import cpu_count
 
 
 def get_uf_file(path_file):
@@ -53,6 +55,28 @@ def calc_average_values(list_values):
 
         average.append(str(round(sum_values/length_main_list, 2)))
         sum_values = 0
+    return average
+
+
+def calc_average_values_forecast(list_values):
+    average = []
+    sum_values = 0
+    sum_values_string = []
+    length_main_list = len(list_values)
+    length_sublists = len(list_values[0])
+    for index_sublist in range(length_sublists):
+        for index_main_list in range(length_main_list):
+            if index_sublist == 0:
+                sum_values_string.append(list_values[index_main_list][index_sublist])
+            else:
+                sum_values += format_float(list_values[index_main_list][index_sublist])
+
+        if index_sublist == 0:
+            average.append(Counter(sum_values_string).most_common(1)[0][0])
+            sum_values_string.clear()
+        else:
+            average.append(str(round(sum_values/length_main_list, 2)))
+            sum_values = 0
     return average
 
 
@@ -119,3 +143,13 @@ def get_first_and_last_day_week(str_date):
         end = start + timedelta(days=6)
 
     return str(start.strftime('%Y/%m/%d')), str(end.strftime('%Y/%m/%d'))
+
+
+def get_number_free_threads():
+    """
+    Retorna a metade da quantidade de theads disponíveis na maquina
+    """
+    try:
+        return cpu_count()/2
+    except:
+        return 1

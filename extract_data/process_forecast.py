@@ -20,7 +20,7 @@ class ProcessForecast:
         self.__id_cities = {}
         self.__process_files = []
         self.data = {}
-        self.number_threads = 5
+        self.number_threads = get_number_free_threads()
 
     @staticmethod
     def get_cities_uf():
@@ -84,13 +84,14 @@ class ProcessForecast:
 
         # limpar tabela de previsão de tempo
         Forecast().init()
+        ForecastAverage.init()
 
-        # previsão dos próximos 7 dias
-        executor = ThreadPoolExecutor()
-        results = [executor.submit(self.get_forecast_last_seven_days, sublist) for sublist in data]
-        print('\nProcessando previsão de 7 dias')
-        for future in results:
-            future.result()
+        # # previsão dos próximos 7 dias
+        # executor = ThreadPoolExecutor()
+        # results = [executor.submit(self.get_forecast_last_seven_days, sublist) for sublist in data]
+        # print('\nProcessando previsão de 7 dias')
+        # for future in results:
+        #     future.result()
 
         # previsão estendida de mais 7 dias
         executor = ThreadPoolExecutor()
@@ -99,14 +100,14 @@ class ProcessForecast:
         for future in results:
             future.result()
 
-        # Calcular a médias das previsões
-        self.get_average_forecast()
-
     @staticmethod
     def get_forecast_last_seven_days(data):
         """
         Busca a previsão do tempo dos próximos 7 dias de uma lista de cidades
+        e calcula a média dos 7 dias
         """
+        values = []
+        average_values = []
         for line in tqdm(data, leave=True):
             latitude = str(line.get('latitude')).replace('-', '')
             longitude = str(line.get('longitude')).replace('-', '')
@@ -116,22 +117,41 @@ class ProcessForecast:
             result_xml = requests.get(f"{get_env('BASE_URL_CPTEC')}/cidade/7dias/-{latitude}/-{longitude}/previsaoLatLon.xml").text
             data = xmltodict.parse(result_xml)
 
+            values_calc_average = []
             for forecast_line in data.get('cidade').get('previsao'):
-                # salvar o registro no banco de dados
-                register = Forecast(
-                    day=forecast_line.get('dia'),
-                    weather_condition=forecast_line.get('tempo'),
-                    maximum_temperature=forecast_line.get('maxima'),
-                    minimum_temperature=forecast_line.get('minima'),
-                    ultra_violet_index=forecast_line.get('iuv'),
-                    id_city=id_city)
-                register.save()
+                # salvar os dados para serem inseridos no banco ao fim do loop
+                values.append([
+                    forecast_line.get('dia'),
+                    forecast_line.get('tempo'),
+                    forecast_line.get('maxima'),
+                    forecast_line.get('minima'),
+                    forecast_line.get('iuv'),
+                    id_city
+                ])
+
+                # salvar dados que serão usados para calcular a média
+                values_calc_average.append([forecast_line.get('tempo'),
+                                            forecast_line.get('maxima'),
+                                            forecast_line.get('minima'),
+                                            forecast_line.get('iuv')])
+
+            # salvar os dados de médias
+            insert_data_average = [7]
+            insert_data_average.extend(calc_average_values_forecast(values_calc_average))
+            insert_data_average.append(id_city)
+            average_values.append(insert_data_average)
+
+        # inserir os dados no banco de dados
+        Forecast.insert_many(values).execute()
+        ForecastAverage.insert_many(average_values).execute()
 
     @staticmethod
     def get_extended_forecast(data):
         """
         Busca a previsão estendida de uma lista de cidades
         """
+        values = []
+        average_values = []
         for line in tqdm(data, leave=True):
             latitude = str(line.get('latitude')).replace('-', '')
             longitude = str(line.get('longitude')).replace('-', '')
@@ -141,22 +161,33 @@ class ProcessForecast:
             result_xml = requests.get(f"{get_env('BASE_URL_CPTEC')}/cidade/{latitude}/{longitude}/estendidaLatLon.xml").text
             data = xmltodict.parse(result_xml)
 
+            values_calc_average = []
             for forecast_line in data.get('cidade').get('previsao'):
-                # salvar o registro no banco de dados
-                register = Forecast(
-                    day=forecast_line.get('dia'),
-                    weather_condition=forecast_line.get('tempo'),
-                    maximum_temperature=forecast_line.get('maxima'),
-                    minimum_temperature=forecast_line.get('minima'),
-                    ultra_violet_index=forecast_line.get('iuv'),
-                    id_city=id_city)
-                register.save()
+                # salvar os dados para serem inseridos no banco ao fim do loop
+                values.append([
+                    forecast_line.get('dia'),
+                    forecast_line.get('tempo'),
+                    forecast_line.get('maxima'),
+                    forecast_line.get('minima'),
+                    forecast_line.get('iuv'),
+                    id_city
+                ])
 
-    def get_average_forecast(self):
-        """
-        Calcular a médias das previsões de 7 dias e estendidas
-        """
-        pass
+                # salvar dados que serão usados para calcular a média
+                values_calc_average.append([forecast_line.get('tempo'),
+                                            forecast_line.get('maxima'),
+                                            forecast_line.get('minima'),
+                                            forecast_line.get('iuv')])
+
+            # salvar os dados de médias
+            insert_data_average = [14]
+            insert_data_average.extend(calc_average_values_forecast(values_calc_average))
+            insert_data_average.append(id_city)
+            average_values.append(insert_data_average)
+
+        # inserir os dados no banco de dados
+        Forecast.insert_many(values).execute()
+        ForecastAverage.insert_many(average_values).execute()
 
     def split_data_process(self, data):
         """

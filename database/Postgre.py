@@ -54,8 +54,8 @@ class Forecast(Model):
 class ForecastAverage(Model):
     period_day = IntegerField()
     weather_condition = CharField()
-    maximum_temperature = IntegerField()
-    minimum_temperature = IntegerField()
+    maximum_temperature = FloatField()
+    minimum_temperature = FloatField()
     ultra_violet_index = FloatField(null=True)
     id_city = IntegerField()
 
@@ -65,8 +65,8 @@ class ForecastAverage(Model):
 
     @staticmethod
     def init():
-        db.drop_tables([Forecast])
-        db.create_tables([Forecast])
+        db.drop_tables([ForecastAverage])
+        db.create_tables([ForecastAverage])
 
 
 class WeatherType(Model):
