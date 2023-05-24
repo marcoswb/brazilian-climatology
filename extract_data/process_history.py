@@ -3,6 +3,7 @@ from tqdm import tqdm
 
 from utils.functions import *
 import utils.shared as shared
+from database.Postgre import *
 
 process_uf = ['SC', 'RS', 'PR']
 max_number_files = 2
@@ -312,6 +313,28 @@ class ProcessHistory:
 
         return filename
 
+    def upload_station_data(self):
+        """
+        Gravar no banco os dados das estações
+        """
+        # limpar tabela de estações
+        Station().init()
+
+        with open(f'{self.__output_folder}/estacoes.txt', encoding=get_encoding_files()) as station_file:
+            for index, line_file in enumerate(station_file.readlines()):
+                splited_line = line_file.replace('\n', '').split(get_env('OUTPUT_SEPARATOR'))
+                if index == 0:
+                    header = list(splited_line)
+                else:
+                    line = dict(zip(header, splited_line))
+                    Station.create(
+                        id_station=line.get('id_estacao'),
+                        name_station=line.get('estacao'),
+                        state=line.get('estado'),
+                        latitude=line.get('latitude'),
+                        longitude=line.get('longitude')
+                    )
+
     def process_history_data(self):
         """
         Processar dados históricos
@@ -321,3 +344,9 @@ class ProcessHistory:
         self.create_folders()
         self.load_cities_files()
         self.process_data()
+
+    def upload_data_to_database(self):
+        """
+        Uppar dados para o banco de dados
+        """
+        self.upload_station_data()

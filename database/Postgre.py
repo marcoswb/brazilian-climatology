@@ -1,4 +1,4 @@
-from peewee import Model, CharField, IntegerField, FloatField, DateField, PostgresqlDatabase
+from peewee import Model, CharField, IntegerField, FloatField, DateField, PrimaryKeyField, PostgresqlDatabase
 
 # conexão com o banco
 db = PostgresqlDatabase('tcc_database', user='marcos', password='marcos', host='localhost', port=5432)
@@ -81,3 +81,20 @@ class WeatherType(Model):
     def init():
         db.drop_tables([WeatherType])
         db.create_tables([WeatherType])
+
+
+class Station(Model):
+    id_station = PrimaryKeyField()
+    name_station = CharField()
+    state = CharField()
+    latitude = CharField()
+    longitude = CharField()
+
+    class Meta:
+        database = db
+        table_name = 'station'
+
+    @staticmethod
+    def init():
+        db.drop_tables([Station])
+        db.create_tables([Station])
