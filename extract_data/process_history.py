@@ -359,6 +359,78 @@ class ProcessHistory:
                 History.insert_many(temp_data).execute()
                 temp_data.clear()
 
+    def upload_data_daily_average_history(self):
+        """
+        Gravar no banco os dados do histórico de médias diárias
+        """
+        # limpar tabela de dados históricos
+        DailyAverageHistory().init()
+
+        base_path = f'{self.__output_folder}/daily_averages'
+        for file in tqdm(listdir(base_path)):
+            temp_data = []
+            with open(f'{base_path}/{file}', encoding=get_encoding_files()) as history_file:
+                for index, line_file in enumerate(history_file.readlines()):
+                    if index != 0:
+                        splited_line = line_file.replace('\n', '').split(get_env('OUTPUT_SEPARATOR'))
+                        formated_values = splited_line[:2]
+                        for value in splited_line[2:-1]:
+                            formated_values.append(format_float(value))
+                        formated_values.append(splited_line[-1])
+                        temp_data.append(formated_values)
+
+                # inserir os dados em lote
+                DailyAverageHistory.insert_many(temp_data).execute()
+                temp_data.clear()
+
+    def upload_data_weekly_average_history(self):
+        """
+        Gravar no banco os dados do histórico de médias semanais
+        """
+        # limpar tabela de dados históricos
+        WeeklyAverageHistory().init()
+
+        base_path = f'{self.__output_folder}/weekly_averages'
+        for file in tqdm(listdir(base_path)):
+            temp_data = []
+            with open(f'{base_path}/{file}', encoding=get_encoding_files()) as history_file:
+                for index, line_file in enumerate(history_file.readlines()):
+                    if index != 0:
+                        splited_line = line_file.replace('\n', '').split(get_env('OUTPUT_SEPARATOR'))
+                        formated_values = splited_line[:2]
+                        for value in splited_line[2:-1]:
+                            formated_values.append(format_float(value))
+                        formated_values.append(splited_line[-1])
+                        temp_data.append(formated_values)
+
+                # inserir os dados em lote
+                WeeklyAverageHistory.insert_many(temp_data).execute()
+                temp_data.clear()
+
+    def upload_data_monthly_average_history(self):
+        """
+        Gravar no banco os dados do histórico de médias mensais
+        """
+        # limpar tabela de dados históricos
+        MonthlyAverageHistory().init()
+
+        base_path = f'{self.__output_folder}/monthly_averages'
+        for file in tqdm(listdir(base_path)):
+            temp_data = []
+            with open(f'{base_path}/{file}', encoding=get_encoding_files()) as history_file:
+                for index, line_file in enumerate(history_file.readlines()):
+                    if index != 0:
+                        splited_line = line_file.replace('\n', '').split(get_env('OUTPUT_SEPARATOR'))
+                        formated_values = splited_line[:2]
+                        for value in splited_line[2:-1]:
+                            formated_values.append(format_float(value))
+                        formated_values.append(splited_line[-1])
+                        temp_data.append(formated_values)
+
+                # inserir os dados em lote
+                MonthlyAverageHistory.insert_many(temp_data).execute()
+                temp_data.clear()
+
     def process_history_data(self):
         """
         Processar dados históricos
@@ -375,3 +447,6 @@ class ProcessHistory:
         """
         self.upload_station_data()
         self.upload_data_history()
+        self.upload_data_daily_average_history()
+        self.upload_data_weekly_average_history()
+        self.upload_data_monthly_average_history()

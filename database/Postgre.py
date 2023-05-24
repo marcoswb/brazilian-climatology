@@ -128,3 +128,91 @@ class History(Model):
     def init():
         db.drop_tables([History])
         db.create_tables([History])
+
+
+class DailyAverageHistory(Model):
+    date = DateField()
+    precipitation = FloatField(null=True)
+    atmospheric_pressure = FloatField(null=True)
+    maximum_atmospheric_pressure = FloatField(null=True)
+    minimum_atmospheric_pressure = FloatField(null=True)
+    global_radiation = FloatField(null=True)
+    air_temperature = FloatField(null=True)
+    temperature_dew_point = FloatField(null=True)
+    maximum_temperature = FloatField(null=True)
+    minimum_temperature = FloatField(null=True)
+    maximum_relative_humidity = FloatField(null=True)
+    minimum_relative_humidity = FloatField(null=True)
+    relative_humidity_air = FloatField(null=True)
+    direction_time_winds = FloatField(null=True)
+    maximum_wind_speed = FloatField(null=True)
+    wind_hourly_speed = FloatField(null=True)
+    station_id = IntegerField()
+
+    class Meta:
+        database = db
+        table_name = 'daily_average_history'
+
+    @staticmethod
+    def init():
+        db.drop_tables([DailyAverageHistory])
+        db.create_tables([DailyAverageHistory])
+
+
+class WeeklyAverageHistory(Model):
+    init_date = DateField()
+    end_date = DateField()
+    precipitation = FloatField(null=True)
+    atmospheric_pressure = FloatField(null=True)
+    maximum_atmospheric_pressure = FloatField(null=True)
+    minimum_atmospheric_pressure = FloatField(null=True)
+    global_radiation = FloatField(null=True)
+    air_temperature = FloatField(null=True)
+    temperature_dew_point = FloatField(null=True)
+    maximum_temperature = FloatField(null=True)
+    minimum_temperature = FloatField(null=True)
+    maximum_relative_humidity = FloatField(null=True)
+    minimum_relative_humidity = FloatField(null=True)
+    relative_humidity_air = FloatField(null=True)
+    direction_time_winds = FloatField(null=True)
+    maximum_wind_speed = FloatField(null=True)
+    wind_hourly_speed = FloatField(null=True)
+    station_id = IntegerField()
+
+    class Meta:
+        database = db
+        table_name = 'weekly_average_history'
+
+    @staticmethod
+    def init():
+        db.drop_tables([WeeklyAverageHistory])
+        db.create_tables([WeeklyAverageHistory])
+
+
+class MonthlyAverageHistory(Model):
+    competence = DateField()
+    precipitation = FloatField(null=True)
+    atmospheric_pressure = FloatField(null=True)
+    maximum_atmospheric_pressure = FloatField(null=True)
+    minimum_atmospheric_pressure = FloatField(null=True)
+    global_radiation = FloatField(null=True)
+    air_temperature = FloatField(null=True)
+    temperature_dew_point = FloatField(null=True)
+    maximum_temperature = FloatField(null=True)
+    minimum_temperature = FloatField(null=True)
+    maximum_relative_humidity = FloatField(null=True)
+    minimum_relative_humidity = FloatField(null=True)
+    relative_humidity_air = FloatField(null=True)
+    direction_time_winds = FloatField(null=True)
+    maximum_wind_speed = FloatField(null=True)
+    wind_hourly_speed = FloatField(null=True)
+    station_id = IntegerField()
+
+    class Meta:
+        database = db
+        table_name = 'monthly_average_history'
+
+    @staticmethod
+    def init():
+        db.drop_tables([MonthlyAverageHistory])
+        db.create_tables([MonthlyAverageHistory])
