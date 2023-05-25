@@ -17,8 +17,10 @@ pyOpenSSL==23.1.1
 python-dotenv==1.0.0
 pytz==2023.3
 requests==2.30.0
+selenium==4.9.1
 six==1.16.0
 tqdm==4.65.0
 urllib3==2.0.2
+webdriver-manager==3.8.6
 Werkzeug==2.2.3
 xmltodict==0.13.0

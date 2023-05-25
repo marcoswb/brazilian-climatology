@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from os import getenv, mkdir
+from os import getenv, makedirs
 from os.path import isdir
 from shutil import rmtree
 from datetime import datetime, timedelta
@@ -41,7 +41,7 @@ def transform_line_write(list_values):
 def create_directory(directory_name):
     if isdir(directory_name):
         rmtree(directory_name)
-    mkdir(directory_name)
+    makedirs(directory_name)
 
 
 def calc_average_values(list_values):

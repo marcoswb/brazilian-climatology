@@ -1,12 +1,16 @@
-from os import listdir
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
+from os import listdir, rmdir
 from tqdm import tqdm
+import requests
+from shutil import unpack_archive, move
 
 from utils.functions import *
 import utils.shared as shared
 from database.Postgre import *
 
 process_uf = ['SC', 'RS', 'PR']
-max_number_files = 2
 
 
 class ProcessHistory:
@@ -19,24 +23,96 @@ class ProcessHistory:
         self.data = {}
 
     @staticmethod
-    def download_data():
+    def get_links_to_download(init_year_download):
+        """
+        Buscar links para realizar o download
+        """
+        # Opção para executar o navegador no modo oculto
+        chrome_options = Options()
+        chrome_options.add_argument('--headless')
+
+        # baixar driver compatível
+        driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
+
+        # buscar elemento principal da paǵina
+        print('acessando a página de download')
+        driver.get('https://portal.inmet.gov.br/dadoshistoricos')
+        element = driver.find_element('css selector', '.cold-lg-12')
+
+        # guardar os anos disponíveis e o link para download
+        print('coletando os links para download')
+        download_data = {}
+        year_elements = element.find_elements('css selector', '.post-preview')
+        for year_element in year_elements:
+            link_element = year_element.find_element('css selector', 'a')
+            year = str(link_element.text).split(' ')[1]
+            link_download = link_element.get_attribute('href')
+
+            # não baixa se for um ano anterior ao solicitado
+            if int(year) >= int(init_year_download):
+                download_data[year] = link_download
+
+        driver.quit()
+
+        return download_data
+
+    @staticmethod
+    def download_file(link, output_file):
+        """
+        Baixa um arquivo para um caminho específico
+        """
+        response = requests.get(link, stream=True)
+        if response.status_code == 200:
+            with open(output_file, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=1024):
+                    file.write(chunk)
+
+    def download_data(self, init_year_download):
         """
         Baixar os dados históricos do INMET
         """
-        print('Baixando os dados')
-        print('Baixar dados daqui: https://portal.inmet.gov.br/dadoshistoricos')
+        create_directory(self.__input_folder)
+        links_to_download = self.get_links_to_download(init_year_download)
+
+        # baixa os arquivos no caminho especificado
+        print('Baixando os arquivos')
+        count = 0
+        total_files = len(links_to_download.values())
+        for year, link in links_to_download.items():
+            self.download_file(link, f'{self.__input_folder}/{year}.zip')
+            count += 1
+            print(f'Arquivo {count} de {total_files}')
+
+        # descompactar os arquivos baixados
+        print('Descompactando os arquivos')
+        count = 0
+        files = listdir(self.__input_folder)
+        total_files = len(files)
+        for file in files:
+            folder = str(file).replace('.zip', '')
+            unpack_archive(f'{self.__input_folder}/{file}', f'{self.__input_folder}/{folder}')
+
+            # as vezes os arquivos vem soltos e as vezes vem dentro da uma outra pasta
+            # aqui movemos caso eles venham dentro de outra pasta
+            if isdir(f'{self.__input_folder}/{folder}/{folder}'):
+                for file_csv in listdir(f'{self.__input_folder}/{folder}/{folder}'):
+                    move(f'{self.__input_folder}/{folder}/{folder}/{file_csv}', f'{self.__input_folder}/{folder}/{file_csv}')
+                rmdir(f'{self.__input_folder}/{folder}/{folder}')
+
+            count += 1
+            print(f'Arquivo {count} de {total_files}')
 
     def load_files_to_process(self):
         """
         Checa quais arquivos irão ser processados.
-        (Processa somente arquivos da região Sul)
         """
         for year in listdir(self.__input_folder):
-            for file in listdir(f'{self.__input_folder}/{year}'):
-                complete_path = f'{self.__input_folder}/{year}/{file}'
-                uf_file = get_uf_file(complete_path)
-                if uf_file in process_uf:
-                    self.__process_files.append(complete_path)
+            if isdir(f'{self.__input_folder}/{year}'):
+                for file in listdir(f'{self.__input_folder}/{year}'):
+                    complete_path = f'{self.__input_folder}/{year}/{file}'
+                    uf_file = get_uf_file(complete_path)
+                    if uf_file in process_uf:
+                        self.__process_files.append(complete_path)
 
     def create_folders(self):
         """
@@ -280,9 +356,6 @@ class ProcessHistory:
                         old_date = str(line.get('data'))
                         old_city = str(id_city)
 
-                if self.data.get('number_file').get('monthly') == max_number_files:
-                    break
-
     @staticmethod
     def print_header(type_file, object_write):
         if type_file == 'daily':
@@ -431,11 +504,13 @@ class ProcessHistory:
                 MonthlyAverageHistory.insert_many(temp_data).execute()
                 temp_data.clear()
 
+    def download_history_data(self, init_year_download):
+        self.download_data(init_year_download)
+
     def process_history_data(self):
         """
         Processar dados históricos
         """
-        self.download_data()
         self.load_files_to_process()
         self.create_folders()
         self.load_cities_files()
