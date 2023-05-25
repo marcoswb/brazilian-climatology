@@ -1,7 +1,15 @@
 from peewee import Model, CharField, IntegerField, FloatField, DateField, PrimaryKeyField, TimeField, PostgresqlDatabase
 
+from utils.functions import get_env
+
 # conexão com o banco
-db = PostgresqlDatabase('tcc_database', user='marcos', password='marcos', host='localhost', port=5432)
+db = PostgresqlDatabase(
+    get_env('DATABASE_NAME'),
+    user=get_env('DATABASE_USER'),
+    password=get_env('DATABASE_PASSWORD'),
+    host=get_env('DATABASE_HOST'),
+    port=get_env('DATABASE_POST')
+)
 
 
 class City(Model):

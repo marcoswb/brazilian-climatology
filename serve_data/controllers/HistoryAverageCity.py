@@ -2,9 +2,10 @@ from flask_restful import Resource
 from flask import jsonify, request, Response
 
 
-class Root(Resource):
+class HistoryAverageCity(Resource):
 
-    def get(self):
+    @staticmethod
+    def get():
         args = request.args
         year = args.get('year')
         month = args.get('month')

@@ -153,3 +153,18 @@ def get_number_free_threads():
         return cpu_count()/2
     except:
         return 1
+
+
+def are_valid_values(*args):
+    for value in args:
+        if value is None:
+            return False
+    return True
+
+
+def is_date(value):
+    try:
+        datetime.strptime(value, '%d/%m/%Y')
+        return True
+    except:
+        return False
