@@ -168,3 +168,57 @@ def is_date(value):
         return True
     except:
         return False
+
+
+def is_valid_time(time):
+    try:
+        if str(time).isdigit():
+            if int(time) < 0 or int(time) > 23:
+                return False
+            else:
+                return True
+        else:
+            return False
+    except:
+        return False
+
+
+def convert_time_days(value):
+    """
+    Processa o horário do dia solicitado
+    """
+    result = []
+    for sublist in str(value).split(','):
+        if '-' in sublist:
+            range_sublist = str(sublist).split('-')
+            if len(range_sublist) == 2:
+                init_range = range_sublist[0]
+                end_range = range_sublist[1]
+                if is_valid_time(init_range) and is_valid_time(end_range):
+                    range_times = range(int(init_range), int(end_range)+1)
+                else:
+                    return []
+            else:
+                return []
+        else:
+            range_times = [sublist]
+
+        for time in range_times:
+            if is_valid_time(time):
+                result.append(int(time))
+            else:
+                return []
+
+    result = list(set(result))
+    result.sort()
+    return result
+
+
+def format_int_to_time(value):
+    string_time = f'{str(value).zfill(2)}:00:00'
+    # return datetime.strptime(string_time, '%H:%M:%S').time()
+    return string_time
+
+
+def format_str_to_date(value):
+    return datetime.strptime(value, '%d/%m/%Y').date()
