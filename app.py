@@ -4,6 +4,7 @@ from flask_cors import CORS
 
 from serve_data.controllers.Root import Root
 from serve_data.controllers.Station import Station
+from serve_data.controllers.City import City
 from serve_data.controllers.HistoryStation import HistoryStation
 from serve_data.controllers.HistoryState import HistoryState
 from serve_data.controllers.HistoryAverageStation import HistoryAverageStation
@@ -17,6 +18,7 @@ api = Api(app)
 # gerais
 api.add_resource(Root, '/')
 api.add_resource(Station, '/station')
+api.add_resource(City, '/city')
 
 # dados históricos
 api.add_resource(HistoryStation, '/history/station')
