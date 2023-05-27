@@ -86,12 +86,12 @@ class ProcessForecast:
         Forecast().init()
         ForecastAverage.init()
 
-        # # previsão dos próximos 7 dias
-        # executor = ThreadPoolExecutor()
-        # results = [executor.submit(self.get_forecast_last_seven_days, sublist) for sublist in data]
-        # print('\nProcessando previsão de 7 dias')
-        # for future in results:
-        #     future.result()
+        # previsão dos próximos 7 dias
+        executor = ThreadPoolExecutor()
+        results = [executor.submit(self.get_forecast_last_seven_days, sublist) for sublist in data]
+        print('\nProcessando previsão de 7 dias')
+        for future in results:
+            future.result()
 
         # previsão estendida de mais 7 dias
         executor = ThreadPoolExecutor()
@@ -119,21 +119,23 @@ class ProcessForecast:
 
             values_calc_average = []
             for forecast_line in data.get('cidade').get('previsao'):
-                # salvar os dados para serem inseridos no banco ao fim do loop
-                values.append([
-                    forecast_line.get('dia'),
-                    forecast_line.get('tempo'),
-                    forecast_line.get('maxima'),
-                    forecast_line.get('minima'),
-                    forecast_line.get('iuv'),
-                    id_city
-                ])
 
-                # salvar dados que serão usados para calcular a média
-                values_calc_average.append([forecast_line.get('tempo'),
-                                            forecast_line.get('maxima'),
-                                            forecast_line.get('minima'),
-                                            forecast_line.get('iuv')])
+                # salvar os dados para serem inseridos no banco ao fim do loop
+                if is_date(forecast_line.get('dia'), format_date='%Y-%m-%d'):
+                    values.append([
+                        forecast_line.get('dia'),
+                        forecast_line.get('tempo'),
+                        forecast_line.get('maxima'),
+                        forecast_line.get('minima'),
+                        forecast_line.get('iuv'),
+                        id_city
+                    ])
+
+                    # salvar dados que serão usados para calcular a média
+                    values_calc_average.append([forecast_line.get('tempo'),
+                                                forecast_line.get('maxima'),
+                                                forecast_line.get('minima'),
+                                                forecast_line.get('iuv')])
 
             # salvar os dados de médias
             insert_data_average = [7]
@@ -163,21 +165,23 @@ class ProcessForecast:
 
             values_calc_average = []
             for forecast_line in data.get('cidade').get('previsao'):
-                # salvar os dados para serem inseridos no banco ao fim do loop
-                values.append([
-                    forecast_line.get('dia'),
-                    forecast_line.get('tempo'),
-                    forecast_line.get('maxima'),
-                    forecast_line.get('minima'),
-                    forecast_line.get('iuv'),
-                    id_city
-                ])
 
-                # salvar dados que serão usados para calcular a média
-                values_calc_average.append([forecast_line.get('tempo'),
-                                            forecast_line.get('maxima'),
-                                            forecast_line.get('minima'),
-                                            forecast_line.get('iuv')])
+                # salvar os dados para serem inseridos no banco ao fim do loop
+                if is_date(forecast_line.get('dia'), format_date='%Y-%m-%d'):
+                    values.append([
+                        forecast_line.get('dia'),
+                        forecast_line.get('tempo'),
+                        forecast_line.get('maxima'),
+                        forecast_line.get('minima'),
+                        forecast_line.get('iuv'),
+                        id_city
+                    ])
+
+                    # salvar dados que serão usados para calcular a média
+                    values_calc_average.append([forecast_line.get('tempo'),
+                                                forecast_line.get('maxima'),
+                                                forecast_line.get('minima'),
+                                                forecast_line.get('iuv')])
 
             # salvar os dados de médias
             insert_data_average = [14]

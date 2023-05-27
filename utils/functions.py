@@ -162,9 +162,9 @@ def are_valid_values(*args):
     return True
 
 
-def is_date(value):
+def is_date(value, format_date='%d/%m/%Y'):
     try:
-        datetime.strptime(value, '%d/%m/%Y')
+        datetime.strptime(value, format_date)
         return True
     except:
         return False

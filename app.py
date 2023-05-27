@@ -9,6 +9,7 @@ from serve_data.controllers.HistoryStation import HistoryStation
 from serve_data.controllers.HistoryState import HistoryState
 from serve_data.controllers.HistoryAverageStation import HistoryAverageStation
 from serve_data.controllers.HistoryAverageState import HistoryAverageState
+from serve_data.controllers.ForecastCity import ForecastCity
 
 app = Flask(__name__)
 CORS(app)
@@ -25,6 +26,9 @@ api.add_resource(HistoryStation, '/history/station')
 api.add_resource(HistoryState, '/history/state')
 api.add_resource(HistoryAverageStation, '/history/average/station')
 api.add_resource(HistoryAverageState, '/history/average/state')
+
+# previsão do tempo
+api.add_resource(ForecastCity, '/forecast/city')
 
 
 if __name__ == '__main__':
