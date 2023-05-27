@@ -1,7 +1,7 @@
 from flask_restful import Resource
 from flask import jsonify, request
 from peewee import SQL
-from datetime import date, time
+from datetime import time
 
 from database.Postgre import Station, History
 from utils.functions import *
