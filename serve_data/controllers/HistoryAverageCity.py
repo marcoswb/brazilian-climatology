@@ -1,7 +1,6 @@
 from flask_restful import Resource
 from flask import jsonify, request
 from peewee import SQL
-from datetime import time
 
 from database.Postgre import Station, DailyAverageHistory, WeeklyAverageHistory, MonthlyAverageHistory
 from utils.functions import *
