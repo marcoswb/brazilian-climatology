@@ -12,7 +12,7 @@ class ForecastState(Resource):
     def get():
         args = request.args
         days = args.get('days')
-        state = args.get('state')
+        state = str(args.get('state')).upper()
 
         if not are_valid_values(days, state):
             response = jsonify({'message': 'Algum argumento não foi informado.'})
