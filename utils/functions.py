@@ -228,3 +228,8 @@ def get_future_day(number_of_days):
     current_day = datetime.now()
     future_day = current_day + timedelta(days=int(number_of_days))
     return future_day.strftime('%d/%m/%Y')
+
+
+def get_current_day():
+    current_day = datetime.now()
+    return current_day.strftime('%d/%m/%Y')
