@@ -6,7 +6,7 @@ from database.Postgre import Station, DailyAverageHistory, WeeklyAverageHistory,
 from utils.functions import *
 
 
-class HistoryAverageCity(Resource):
+class HistoryAverageStation(Resource):
 
     @staticmethod
     def get():

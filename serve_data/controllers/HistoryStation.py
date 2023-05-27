@@ -7,7 +7,7 @@ from database.Postgre import Station, History
 from utils.functions import *
 
 
-class HistoryCity(Resource):
+class HistoryStation(Resource):
 
     @staticmethod
     def get():
