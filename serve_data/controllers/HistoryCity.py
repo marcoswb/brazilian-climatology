@@ -49,7 +49,6 @@ class HistoryCity(Resource):
             list_times = list(range(0, 24))
 
         formated_list_times = "('"+"','".join([format_int_to_time(hour) for hour in list_times])+"')"
-        print(formated_list_times)
         database_result = History.select().where(SQL(f"station_id = '{station}'") &
                                                  SQL(f"date >= '{init_date}'") &
                                                  SQL(f"hour in {formated_list_times}")).order_by(History.date, History.hour).dicts()
@@ -58,17 +57,24 @@ class HistoryCity(Resource):
             'station': station,
             'init_date': init_date,
             'list_times': [format_int_to_time(hour) for hour in list_times],
-            'data': []
+            'data': {}
         }
         for line in database_result:
             formated_line = {}
+            competence = ''
             for key, value in line.items():
                 if isinstance(value, date):
                     value = value.strftime('%d/%m/%Y')
                 elif isinstance(value, time):
                     value = value.strftime('%H:%M:%S')
-                formated_line[key] = value
 
-            response['data'].append(formated_line)
+                formated_line[key] = value
+                if key == 'date':
+                    competence = get_competence(value, result_format='%d/%m/%Y')
+
+            if competence not in response['data'].keys():
+                response['data'][competence] = []
+
+            response['data'][competence].append(formated_line)
 
         return response
