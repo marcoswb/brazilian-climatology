@@ -222,3 +222,9 @@ def format_int_to_time(value):
 
 def format_str_to_date(value):
     return datetime.strptime(value, '%d/%m/%Y').date()
+
+
+def get_future_day(number_of_days):
+    current_day = datetime.now()
+    future_day = current_day + timedelta(days=int(number_of_days))
+    return future_day.strftime('%d/%m/%Y')
