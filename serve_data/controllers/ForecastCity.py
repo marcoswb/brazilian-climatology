@@ -1,9 +1,9 @@
 from flask_restful import Resource
-from flask import jsonify, request
+from flask import request
 from peewee import SQL
-from datetime import time
 
-from database.Postgre import City, Forecast
+from database.Postgre import Forecast
+from utils.ValidationRequest import ValidationRequest
 from utils.functions import *
 
 
@@ -15,22 +15,12 @@ class ForecastCity(Resource):
         days = args.get('days')
         city = args.get('city')
 
-        if not are_valid_values(days, city):
-            response = jsonify({'message': 'Algum argumento não foi informado.'})
-            response.status_code = 422
-            return response
+        validation = ValidationRequest(days, city)
+        validation.set_number_argument(days)
+        validation.set_city_argument(city)
 
-        if not days.isdigit():
-            response = jsonify({'message': f"Preencha com um valor válido o argumento 'days'"})
-            response.status_code = 400
-            return response
-
-        cities = City.select(City.id)
-        list_cities = [city_db.id for city_db in cities]
-
-        if int(city) not in list_cities:
-            response = jsonify({'message': f"Valor do argumento 'city' não consta no banco de dados."})
-            response.status_code = 400
+        invalid_data, response = validation.validate()
+        if invalid_data:
             return response
 
         init_day = get_current_day()

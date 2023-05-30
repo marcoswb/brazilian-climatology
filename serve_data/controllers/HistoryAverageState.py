@@ -3,6 +3,7 @@ from flask import jsonify, request
 from peewee import SQL
 
 from database.Postgre import Station, DailyAverageHistory, WeeklyAverageHistory, MonthlyAverageHistory
+from utils.ValidationRequest import ValidationRequest
 from utils.functions import *
 
 
@@ -15,32 +16,13 @@ class HistoryAverageState(Resource):
         state = str(args.get('state')).upper()
         frequency = args.get('frequency')
 
-        if not are_valid_values(init_date, state, frequency):
-            response = jsonify({'message': 'Algum argumento não foi informado.'})
-            response.status_code = 422
-            return response
+        validation = ValidationRequest(init_date, state, frequency)
+        validation.set_date_argument(init_date)
+        validation.set_state_history_argument(state)
+        validation.set_frequency_argument(frequency)
 
-        if not is_date(init_date):
-            response = jsonify({'message': f"Preencha com uma data válida o argumento 'init_date'"})
-            response.status_code = 400
-            return response
-
-        if len(state) != 2:
-            response = jsonify({'message': f"Preencha com um valor válido o argumento 'state'"})
-            response.status_code = 400
-            return response
-
-        states = Station.select(Station.state)
-        list_states = [str(state_obj.state).upper() for state_obj in states]
-
-        if state not in list_states:
-            response = jsonify({'message': f"Valor do argumento 'state' não consta no banco de dados."})
-            response.status_code = 400
-            return response
-
-        if frequency not in ['daily', 'weekly', 'monthly']:
-            response = jsonify({'message': f"Valor do argumento 'frequency' não é permitido."})
-            response.status_code = 400
+        invalid_data, response = validation.validate()
+        if invalid_data:
             return response
 
         match frequency:

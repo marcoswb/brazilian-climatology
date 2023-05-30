@@ -3,7 +3,8 @@ from flask import jsonify, request
 from peewee import SQL
 from datetime import time
 
-from database.Postgre import Station, History
+from database.Postgre import History
+from utils.ValidationRequest import ValidationRequest
 from utils.functions import *
 
 
@@ -16,27 +17,12 @@ class HistoryState(Resource):
         times_of_day = args.get('times_of_day')
         state = str(args.get('state')).upper()
 
-        if not are_valid_values(init_date, state):
-            response = jsonify({'message': 'Algum argumento não foi informado.'})
-            response.status_code = 422
-            return response
+        validation = ValidationRequest(init_date, state)
+        validation.set_date_argument(init_date)
+        validation.set_state_history_argument(state)
 
-        if not is_date(init_date):
-            response = jsonify({'message': f"Preencha com uma data válida o argumento 'init_date'"})
-            response.status_code = 400
-            return response
-
-        if len(state) != 2:
-            response = jsonify({'message': f"Preencha com um valor válido o argumento 'state'"})
-            response.status_code = 400
-            return response
-
-        states = Station.select(Station.state)
-        list_states = [str(state_obj.state).upper() for state_obj in states]
-
-        if state not in list_states:
-            response = jsonify({'message': f"Valor do argumento 'state' não consta no banco de dados."})
-            response.status_code = 400
+        invalid_data, response = validation.validate()
+        if invalid_data:
             return response
 
         if times_of_day is not None:

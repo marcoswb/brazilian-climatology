@@ -1,9 +1,9 @@
 from flask_restful import Resource
-from flask import jsonify, request
+from flask import request
 from peewee import SQL
 
-from database.Postgre import City, ForecastAverage
-from utils.functions import *
+from database.Postgre import ForecastAverage
+from utils.ValidationRequest import ValidationRequest
 
 
 class ForecastAverageCity(Resource):
@@ -14,22 +14,12 @@ class ForecastAverageCity(Resource):
         period_day = args.get('period_day')
         city = args.get('city')
 
-        if not are_valid_values(period_day, city):
-            response = jsonify({'message': 'Algum argumento não foi informado.'})
-            response.status_code = 422
-            return response
+        validation = ValidationRequest(period_day, city)
+        validation.set_period_argument(period_day)
+        validation.set_city_argument(city)
 
-        if period_day not in ['7', '14']:
-            response = jsonify({'message': f"Preencha com um valor válido o argumento 'period_day'"})
-            response.status_code = 400
-            return response
-
-        cities = City.select(City.id)
-        list_cities = [city_db.id for city_db in cities]
-
-        if int(city) not in list_cities:
-            response = jsonify({'message': f"Valor do argumento 'city' não consta no banco de dados."})
-            response.status_code = 400
+        invalid_data, response = validation.validate()
+        if invalid_data:
             return response
 
         database_result = ForecastAverage.select().where(SQL(f"id_city = '{city}'") &

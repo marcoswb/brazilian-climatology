@@ -1,8 +1,9 @@
 from flask_restful import Resource
-from flask import jsonify, request
+from flask import request
 from peewee import SQL
 
-from database.Postgre import Station, DailyAverageHistory, WeeklyAverageHistory, MonthlyAverageHistory
+from database.Postgre import DailyAverageHistory, WeeklyAverageHistory, MonthlyAverageHistory
+from utils.ValidationRequest import ValidationRequest
 from utils.functions import *
 
 
@@ -15,32 +16,13 @@ class HistoryAverageStation(Resource):
         station = args.get('station')
         frequency = args.get('frequency')
 
-        if not are_valid_values(init_date, station, frequency):
-            response = jsonify({'message': 'Algum argumento não foi informado.'})
-            response.status_code = 422
-            return response
+        validation = ValidationRequest(init_date, station, frequency)
+        validation.set_date_argument(init_date)
+        validation.set_station_argument(station)
+        validation.set_frequency_argument(frequency)
 
-        if not is_date(init_date):
-            response = jsonify({'message': f"Preencha com uma data válida o argumento 'init_date'"})
-            response.status_code = 400
-            return response
-
-        if not station.isdigit():
-            response = jsonify({'message': f"Preencha com um valor válido o argumento 'station'"})
-            response.status_code = 400
-            return response
-
-        stations = Station.select(Station.id_station)
-        list_stations = [station_db.id_station for station_db in stations]
-
-        if int(station) not in list_stations:
-            response = jsonify({'message': f"Valor do argumento 'station' não consta no banco de dados."})
-            response.status_code = 400
-            return response
-
-        if frequency not in ['daily', 'weekly', 'monthly']:
-            response = jsonify({'message': f"Valor do argumento 'frequency' não é permitido."})
-            response.status_code = 400
+        invalid_data, response = validation.validate()
+        if invalid_data:
             return response
 
         match frequency:
