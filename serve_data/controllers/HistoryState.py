@@ -1,10 +1,9 @@
 from flask_restful import Resource
 from flask import jsonify, request
-from peewee import SQL
 from datetime import time
 
-from database.Postgre import History
 from serve_data.classes.ValidationRequest import ValidationRequest
+from serve_data.classes.Database import Database
 from utils.functions import *
 
 
@@ -35,9 +34,7 @@ class HistoryState(Resource):
             list_times = list(range(0, 24))
 
         formated_list_times = "('"+"','".join([format_int_to_time(hour) for hour in list_times])+"')"
-        database_result = History.select().where(SQL(f"station_id in (SELECT sub.id_station from station as sub where sub.state = '{state}')") &
-                                                 SQL(f"date >= '{init_date}'") &
-                                                 SQL(f"hour in {formated_list_times}")).order_by(History.date, History.hour).dicts()
+        database_result = Database().get_history_state(state, init_date, formated_list_times)
 
         response = {
             'state': state,

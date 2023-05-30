@@ -1,9 +1,8 @@
 from flask_restful import Resource
 from flask import request
-from peewee import SQL
 
-from database.Postgre import DailyAverageHistory, WeeklyAverageHistory, MonthlyAverageHistory
 from serve_data.classes.ValidationRequest import ValidationRequest
+from serve_data.classes.Database import Database
 from utils.functions import *
 
 
@@ -27,14 +26,11 @@ class HistoryAverageState(Resource):
 
         match frequency:
             case 'daily':
-                database_result = DailyAverageHistory.select().where(SQL(f"station_id in (SELECT sub.id_station from station as sub where sub.state = '{state}')") &
-                                                                     SQL(f"date >= '{init_date}'")).order_by(DailyAverageHistory.date).dicts()
+                database_result = Database().get_daily_average_history_state(state, init_date)
             case 'weekly':
-                database_result = WeeklyAverageHistory.select().where(SQL(f"station_id in (SELECT sub.id_station from station as sub where sub.state = '{state}')") &
-                                                                      SQL(f"init_date >= '{init_date}'")).order_by(WeeklyAverageHistory.init_date).dicts()
+                database_result = Database().get_weekly_average_history_state(state, init_date)
             case 'monthly':
-                database_result = MonthlyAverageHistory.select().where(SQL(f"station_id in (SELECT sub.id_station from station as sub where sub.state = '{state}')") &
-                                                                       SQL(f"competence >= '{init_date}'")).order_by(MonthlyAverageHistory.competence).dicts()
+                database_result = Database().get_monthly_average_history_state(state, init_date)
 
         response = {
             'state': state,
