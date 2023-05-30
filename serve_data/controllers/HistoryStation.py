@@ -3,7 +3,7 @@ from flask import jsonify, request
 from peewee import SQL
 from datetime import time
 
-from utils.ValidationRequest import ValidationRequest
+from serve_data.classes.ValidationRequest import ValidationRequest
 from database.Postgre import History
 from utils.functions import *
 

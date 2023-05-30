@@ -1,9 +1,9 @@
 from flask_restful import Resource
-from flask import jsonify, request
+from flask import request
 from peewee import SQL
 
-from database.Postgre import Station, DailyAverageHistory, WeeklyAverageHistory, MonthlyAverageHistory
-from utils.ValidationRequest import ValidationRequest
+from database.Postgre import DailyAverageHistory, WeeklyAverageHistory, MonthlyAverageHistory
+from serve_data.classes.ValidationRequest import ValidationRequest
 from utils.functions import *
 
 

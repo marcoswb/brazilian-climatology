@@ -1,9 +1,8 @@
 from flask_restful import Resource
 from flask import request
-from peewee import SQL
 
-from database.Postgre import ForecastAverage
-from utils.ValidationRequest import ValidationRequest
+from serve_data.classes.ValidationRequest import ValidationRequest
+from serve_data.classes.Database import Database
 
 
 class ForecastAverageCity(Resource):
@@ -22,9 +21,7 @@ class ForecastAverageCity(Resource):
         if invalid_data:
             return response
 
-        database_result = ForecastAverage.select().where(SQL(f"id_city = '{city}'") &
-                                                         SQL(f"period_day = '{period_day}'")).dicts()
-
+        database_result = Database().get_average_forecast_city(city, period_day)
         response = {
             'city': city,
             'period_day': period_day,

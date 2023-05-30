@@ -4,7 +4,7 @@ from peewee import SQL
 from datetime import time
 
 from database.Postgre import History
-from utils.ValidationRequest import ValidationRequest
+from serve_data.classes.ValidationRequest import ValidationRequest
 from utils.functions import *
 
 

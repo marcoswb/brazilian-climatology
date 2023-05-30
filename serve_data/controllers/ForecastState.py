@@ -1,9 +1,8 @@
 from flask_restful import Resource
 from flask import request
-from peewee import SQL
 
-from database.Postgre import Forecast
-from utils.ValidationRequest import ValidationRequest
+from serve_data.classes.ValidationRequest import ValidationRequest
+from serve_data.classes.Database import Database
 from utils.functions import *
 
 
@@ -23,11 +22,9 @@ class ForecastState(Resource):
         if invalid_data:
             return response
 
-        init_day = get_current_day()
+        init_date = get_current_day()
         end_date = get_future_day(days)
-        database_result = Forecast.select().where(SQL(f"id_city in (select sub.id from city as sub where sub.state = '{state}')") &
-                                                  SQL(f"day >= '{init_day}'") &
-                                                  SQL(f"day <= '{end_date}'")).order_by(Forecast.id_city, Forecast.day).dicts()
+        database_result = Database().get_forecast_state(state, init_date, end_date)
 
         response = {
             'state': state,

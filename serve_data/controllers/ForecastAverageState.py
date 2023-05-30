@@ -1,10 +1,8 @@
 from flask_restful import Resource
-from flask import jsonify, request
-from peewee import SQL
+from flask import request
 
-from database.Postgre import City, ForecastAverage
-from utils.ValidationRequest import ValidationRequest
-from utils.functions import *
+from serve_data.classes.ValidationRequest import ValidationRequest
+from serve_data.classes.Database import Database
 
 
 class ForecastAverageState(Resource):
@@ -23,9 +21,7 @@ class ForecastAverageState(Resource):
         if invalid_data:
             return response
 
-        database_result = ForecastAverage.select().where(SQL(f"id_city in (select sub.id from city as sub where sub.state = '{state}')") &
-                                                         SQL(f"period_day = '{period_day}'")).dicts()
-
+        database_result = Database().get_average_forecast_state(state, period_day)
         response = {
             'state': state,
             'period_day': period_day,
