@@ -1,8 +1,8 @@
 from flask_restful import Resource
-from flask import jsonify, request
+from flask import request
 
-from database.Postgre import City as CityDatabase
-from utils.functions import *
+from serve_data.classes.ValidationRequest import ValidationRequest
+from serve_data.classes.Database import Database
 
 
 class City(Resource):
@@ -13,23 +13,17 @@ class City(Resource):
         filter_state = args.get('state')
 
         if filter_state is not None:
-            if len(filter_state) != 2:
-                response = jsonify({'message': f"Preencha com um valor válido o argumento 'state'"})
-                response.status_code = 400
-                return response
+            validation = ValidationRequest()
+            validation.set_state_forecast_argument(filter_state)
 
-            states = CityDatabase.select(CityDatabase.state)
-            list_states = [str(state_obj.state).upper() for state_obj in states]
-
-            if filter_state not in list_states:
-                response = jsonify({'message': f"Valor do argumento 'state' não consta no banco de dados."})
-                response.status_code = 400
+            invalid_data, response = validation.validate()
+            if invalid_data:
                 return response
 
         if filter_state is not None:
-            database_result = CityDatabase.select().where(CityDatabase.state == str(filter_state).upper()).order_by(CityDatabase.state, CityDatabase.city).dicts()
+            database_result = Database().get_city_from_state(filter_state)
         else:
-            database_result = CityDatabase.select().order_by(CityDatabase.state, CityDatabase.city).dicts()
+            database_result = Database().get_all_city()
 
         response = {}
         for line in database_result:

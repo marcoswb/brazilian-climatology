@@ -2,7 +2,6 @@ from flask_restful import Resource
 from flask import request
 
 from serve_data.classes.ValidationRequest import ValidationRequest
-from serve_data.classes.FormatResponse import FormatData
 from serve_data.classes.Database import Database
 
 

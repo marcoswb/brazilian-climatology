@@ -24,14 +24,9 @@ class HistoryState(Resource):
         if invalid_data:
             return response
 
-        if times_of_day is not None:
-            list_times = convert_time_days(times_of_day)
-            if not list_times:
-                response = jsonify({'message': f"Valor do argumento 'times_of_day' não é permitido."})
-                response.status_code = 400
-                return response
-        else:
-            list_times = list(range(0, 24))
+        list_times, response = validation.validate_times_of_day(times_of_day)
+        if not list_times:
+            return response
 
         format_data = FormatData()
 

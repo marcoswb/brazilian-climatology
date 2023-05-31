@@ -1,8 +1,8 @@
 from flask_restful import Resource
-from flask import jsonify, request
+from flask import request
 
-from database.Postgre import Station as StationDatabase
-from utils.functions import *
+from serve_data.classes.ValidationRequest import ValidationRequest
+from serve_data.classes.Database import Database
 
 
 class Station(Resource):
@@ -13,23 +13,17 @@ class Station(Resource):
         filter_state = args.get('state')
 
         if filter_state is not None:
-            if len(filter_state) != 2:
-                response = jsonify({'message': f"Preencha com um valor válido o argumento 'state'"})
-                response.status_code = 400
-                return response
+            validation = ValidationRequest()
+            validation.set_state_history_argument(filter_state)
 
-            states = StationDatabase.select(StationDatabase.state)
-            list_states = [str(state_obj.state).upper() for state_obj in states]
-
-            if filter_state not in list_states:
-                response = jsonify({'message': f"Valor do argumento 'state' não consta no banco de dados."})
-                response.status_code = 400
+            invalid_data, response = validation.validate()
+            if invalid_data:
                 return response
 
         if filter_state is not None:
-            database_result = StationDatabase.select().where(StationDatabase.state == str(filter_state).upper()).order_by(StationDatabase.state, StationDatabase.name_station).dicts()
+            database_result = Database().get_station_from_state(filter_state)
         else:
-            database_result = StationDatabase.select().order_by(StationDatabase.state, StationDatabase.name_station).dicts()
+            database_result = Database().get_all_station()
 
         response = {}
         for line in database_result:

@@ -1,5 +1,6 @@
 from peewee import SQL
 
+from database.Postgre import Station, City, WeatherType
 from database.Postgre import Forecast, ForecastAverage
 from database.Postgre import History, DailyAverageHistory, WeeklyAverageHistory, MonthlyAverageHistory
 
@@ -80,4 +81,29 @@ class Database:
     def get_average_forecast_state(state, period_day):
         result = ForecastAverage.select().where(SQL(f"id_city in (select sub.id from city as sub where sub.state = '{state}')") &
                                                 SQL(f"period_day = '{period_day}'")).dicts()
+        return result
+
+    @staticmethod
+    def get_station_from_state(state):
+        result = Station.select().where(Station.state == str(state).upper()).order_by(Station.state, Station.name_station).dicts()
+        return result
+
+    @staticmethod
+    def get_all_station():
+        result = Station.select().order_by(Station.state, Station.name_station).dicts()
+        return result
+
+    @staticmethod
+    def get_city_from_state(state):
+        result = City.select().where(City.state == str(state).upper()).order_by(City.state, City.city).dicts()
+        return result
+
+    @staticmethod
+    def get_all_city():
+        result = City.select().order_by(City.state, City.city).dicts()
+        return result
+
+    @staticmethod
+    def get_weather_type():
+        result = WeatherType.select().order_by(WeatherType.weather_condition).dicts()
         return result
