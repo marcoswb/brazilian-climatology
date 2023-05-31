@@ -2,6 +2,7 @@ from flask_restful import Resource
 from flask import request
 
 from serve_data.classes.ValidationRequest import ValidationRequest
+from serve_data.classes.FormatResponse import FormatData
 from serve_data.classes.Database import Database
 
 
@@ -22,11 +23,7 @@ class ForecastAverageCity(Resource):
             return response
 
         database_result = Database().get_average_forecast_city(city, period_day)
-        response = {
-            'city': city,
-            'period_day': period_day,
-            'data': []
-        }
+        response = {'city': city, 'period_day': period_day, 'data': []}
         for line in database_result:
             response['data'].append(line)
 

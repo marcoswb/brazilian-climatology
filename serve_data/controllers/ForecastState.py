@@ -3,6 +3,7 @@ from flask import request
 
 from serve_data.classes.ValidationRequest import ValidationRequest
 from serve_data.classes.Database import Database
+from serve_data.classes.FormatResponse import FormatData
 from utils.functions import *
 
 
@@ -26,22 +27,10 @@ class ForecastState(Resource):
         end_date = get_future_day(days)
         database_result = Database().get_forecast_state(state, init_date, end_date)
 
-        response = {
-            'state': state,
-            'end_date': end_date,
-            'data': {}
-        }
+        format_response = FormatData()
+        response = {'state': state, 'end_date': end_date, 'data': {}}
         for line in database_result:
-            formated_line = {}
-            city = ''
-            for key, value in line.items():
-                if isinstance(value, date):
-                    value = value.strftime('%d/%m/%Y')
-
-                if key == 'id_city':
-                    city = value
-
-                formated_line[key] = value
+            formated_line, city = format_response.format_line(line, 'id_city')
 
             if city not in response['data'].keys():
                 response['data'][city] = []

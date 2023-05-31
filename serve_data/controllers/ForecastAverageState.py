@@ -22,11 +22,7 @@ class ForecastAverageState(Resource):
             return response
 
         database_result = Database().get_average_forecast_state(state, period_day)
-        response = {
-            'state': state,
-            'period_day': period_day,
-            'data': []
-        }
+        response = {'state': state, 'period_day': period_day, 'data': []}
         for line in database_result:
             response['data'].append(line)
 
