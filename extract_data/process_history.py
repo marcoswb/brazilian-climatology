@@ -10,17 +10,20 @@ from utils.functions import *
 import utils.shared as shared
 from database.Postgre import *
 
-process_uf = ['SC', 'RS', 'PR']
-
 
 class ProcessHistory:
 
-    def __init__(self, input_folder='', output_folder=''):
+    def __init__(self, input_folder='', output_folder='', process_uf=None):
         self.__input_folder = input_folder
         self.__output_folder = output_folder
         self.__id_cities = {}
         self.__process_files = []
         self.data = {}
+
+        if not process_uf:
+            self.__process_uf = shared.uf_estados
+        else:
+            self.__process_uf = process_uf
 
     @staticmethod
     def get_links_to_download(init_year_download):
@@ -111,7 +114,7 @@ class ProcessHistory:
                 for file in listdir(f'{self.__input_folder}/{year}'):
                     complete_path = f'{self.__input_folder}/{year}/{file}'
                     uf_file = get_uf_file(complete_path)
-                    if uf_file in process_uf:
+                    if uf_file in self.__process_uf:
                         self.__process_files.append(complete_path)
 
     def create_folders(self):

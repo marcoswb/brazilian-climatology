@@ -1,6 +1,7 @@
 from extract_data.process_history import ProcessHistory
 from extract_data.process_forecast import ProcessForecast
 from API import API
+import utils.shared as shared
 from utils.functions import *
 
 
@@ -58,7 +59,20 @@ class Main:
     def process_historical_data():
         input_path = question_user('Informe o caminho onde os dados históricos foram baixados', response_is_dir=True)
         output_path = question_user('Informe o caminho onde os dados processados serão salvos', response_is_dir=True)
-        process = ProcessHistory(input_path, output_path)
+
+        limit_process = question_user('Deseja processar somente alguns estados específicos?(S-SIM/N-NÃO)', limit_response=['S', 'N'])
+        uf_process = []
+        if limit_process == 'S':
+            while True:
+                uf = question_user('Informe uma UF ou tecle enter para encerrar')
+                if not uf:
+                    break
+                elif uf in shared.uf_estados:
+                    uf_process.append(uf)
+                else:
+                    print('Informe uma UF válida!')
+
+        process = ProcessHistory(input_path, output_path, uf_process)
         process.process_history_data()
 
     @staticmethod
@@ -76,7 +90,19 @@ class Main:
         if response_load_counties == 'S':
             load_counties = True
 
-        process = ProcessForecast()
+        limit_process = question_user('Deseja processar somente alguns estados específicos?(S-SIM/N-NÃO)', limit_response=['S', 'N'])
+        uf_process = []
+        if limit_process == 'S':
+            while True:
+                uf = question_user('Informe uma UF ou tecle enter para encerrar')
+                if not uf:
+                    break
+                elif uf in shared.uf_estados:
+                    uf_process.append(uf)
+                else:
+                    print('Informe uma UF válida!')
+
+        process = ProcessForecast(uf_process)
         process.process_forecast_data(load_counties=load_counties)
 
     @staticmethod

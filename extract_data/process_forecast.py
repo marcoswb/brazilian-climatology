@@ -8,20 +8,20 @@ from classes.CustomHttpAdapter import get_legacy_session
 from database.Postgre import *
 import utils.shared as shared
 
-process_uf = ['SC', 'RS', 'PR']
-max_number_files = 2
-
 
 class ProcessForecast:
 
-    def __init__(self):
+    def __init__(self, process_uf=None):
         self.__id_cities = {}
         self.__process_files = []
         self.data = {}
         self.number_threads = get_number_free_threads()
+        if not process_uf:
+            self.__process_uf = shared.uf_estados
+        else:
+            self.__process_uf = process_uf
 
-    @staticmethod
-    def get_cities_uf():
+    def get_cities_uf(self):
         """
         Buscar a lista de municipios que cada estado possui
         """
@@ -29,7 +29,7 @@ class ProcessForecast:
         City().init()
 
         # busca todas as cidades do estado com base na API do IBGE
-        for uf in process_uf:
+        for uf in self.__process_uf:
             response = get_legacy_session().get(f"{get_env('BASE_URL_IBGE')}/localidades/estados/{uf}/distritos")
             for line in response.json():
                 city = line.get('nome')

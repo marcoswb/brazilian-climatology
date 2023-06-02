@@ -269,5 +269,6 @@ def question_user(message, limit_response=None, response_is_dir=False, int_respo
                 print('Informe um valor válido válido!')
         else:
             option = input(f'{message} => ')
+            break
 
     return option
