@@ -50,14 +50,30 @@ class Main:
         process = ProcessHistory(input_path)
         process.download_history_data(valid_year)
 
-    def process_historical_data(self):
-        pass
+    @staticmethod
+    def process_historical_data():
+        input_path = question_user('Informe o caminho onde os dados históricos foram baixados', response_is_dir=True)
+        output_path = question_user('Informe o caminho onde os dados processados serão salvos', response_is_dir=True)
+        process = ProcessHistory(input_path, output_path)
+        process.process_history_data()
 
-    def upload_historical_data(self):
-        pass
+    @staticmethod
+    def upload_historical_data():
+        output_path = question_user('Informe o caminho onde os dados históricos processados estão salvos', response_is_dir=True)
+        process = ProcessHistory(output_folder=output_path)
+        process.upload_data_to_database()
 
-    def update_forecast_data(self):
-        pass
+    @staticmethod
+    def update_forecast_data():
+        response_load_counties = question_user('Deseja utilizar os dados das cidades que já estão no banco de dados?(S-SIM/N-NÃO)', limit_response=['S', 'N'])
+
+        # não carregar as cidades novamente
+        load_counties = False
+        if response_load_counties == 'S':
+            load_counties = True
+
+        process = ProcessForecast()
+        process.process_forecast_data(load_counties=load_counties)
 
 
 if __name__ == '__main__':

@@ -14,9 +14,7 @@ max_number_files = 2
 
 class ProcessForecast:
 
-    def __init__(self, input_folder, output_folder):
-        self.__input_folder = input_folder
-        self.__output_folder = output_folder
+    def __init__(self):
         self.__id_cities = {}
         self.__process_files = []
         self.data = {}
