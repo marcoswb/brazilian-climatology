@@ -84,7 +84,14 @@ def format_float(value):
     try:
         return float(value)
     except:
-        return 0
+        return None
+
+
+def format_int(value):
+    try:
+        return int(value)
+    except:
+        return None
 
 
 def convert_date_format(date_str, date_format='%Y/%m/%d'):
@@ -233,3 +240,34 @@ def get_future_day(number_of_days):
 def get_current_day():
     current_day = datetime.now()
     return current_day.strftime('%d/%m/%Y')
+
+
+def question_user(message, limit_response=None, response_is_dir=False, int_response=False):
+    option = ''
+    while not option:
+        if limit_response:
+            response = input(f'{message} => ')
+
+            if int_response:
+                response = format_int(response)
+
+            if response in limit_response:
+                option = response
+            else:
+                print('Informe uma opção válida!')
+        elif response_is_dir:
+            response = input(f'{message} => ')
+            if isdir(response):
+                option = response
+            else:
+                print('Informe um caminho válido!')
+        elif int_response:
+            response = input(f'{message} => ')
+            if format_int(response):
+                option = format_int(response)
+            else:
+                print('Informe um valor válido válido!')
+        else:
+            option = input(f'{message} => ')
+
+    return option

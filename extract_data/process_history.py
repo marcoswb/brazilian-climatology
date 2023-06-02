@@ -15,7 +15,7 @@ process_uf = ['SC', 'RS', 'PR']
 
 class ProcessHistory:
 
-    def __init__(self, input_folder, output_folder):
+    def __init__(self, input_folder, output_folder=''):
         self.__input_folder = input_folder
         self.__output_folder = output_folder
         self.__id_cities = {}
