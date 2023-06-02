@@ -1,5 +1,6 @@
 from extract_data.process_history import ProcessHistory
 from extract_data.process_forecast import ProcessForecast
+from API import API
 from utils.functions import *
 
 
@@ -12,6 +13,7 @@ class Main:
             '2': 'Processar dados históricos',
             '3': 'Cadastrar dados históricos processados no banco de dados',
             '4': 'Atualizar dados de previsão do tempo',
+            '5': 'Iniciar servidor da API'
         }
         print('\nMenu de opções')
         for number_option, description in options.items():
@@ -30,6 +32,8 @@ class Main:
                 self.upload_historical_data()
             case '4':
                 self.update_forecast_data()
+            case '5':
+                self.init_api()
 
     @staticmethod
     def download_historical_data():
@@ -74,6 +78,11 @@ class Main:
 
         process = ProcessForecast()
         process.process_forecast_data(load_counties=load_counties)
+
+    @staticmethod
+    def init_api():
+        print('\nPressione CTRL + C para encerrar...\n')
+        API().run()
 
 
 if __name__ == '__main__':
