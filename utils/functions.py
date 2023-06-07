@@ -48,14 +48,17 @@ def calc_average_values(list_values):
     average = []
     sum_values = 0
     length_main_list = len(list_values)
-    length_sublists = len(list_values[0])
-    for index_sublist in range(length_sublists):
-        for index_main_list in range(length_main_list):
-            sum_values += format_float(list_values[index_main_list][index_sublist])
+    if len(list_values) > 0:
+        length_sublists = len(list_values[0])
+        for index_sublist in range(length_sublists):
+            for index_main_list in range(length_main_list):
+                sum_values += format_float(list_values[index_main_list][index_sublist], default_value=0)
 
-        average.append(str(round(sum_values/length_main_list, 2)))
-        sum_values = 0
-    return average
+            average.append(str(round(sum_values/length_main_list, 2)))
+            sum_values = 0
+        return average
+    else:
+        return []
 
 
 def calc_average_values_forecast(list_values):
@@ -80,11 +83,11 @@ def calc_average_values_forecast(list_values):
     return average
 
 
-def format_float(value):
+def format_float(value, default_value=None):
     try:
         return float(value)
     except:
-        return None
+        return default_value
 
 
 def format_int(value):

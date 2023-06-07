@@ -262,7 +262,7 @@ class ProcessHistory:
                             old_first_day_week = str(first_day_week)
 
                         # iniciar variavel do mês
-                        competence = get_competence(line.get('data'))
+                        competence = get_competence(line.get('data'), date_format='%Y/%m/%d')
                         if not old_competence:
                             old_competence = str(competence)
 
@@ -333,20 +333,24 @@ class ProcessHistory:
                             if first_day_week != old_first_day_week:
 
                                 write_values = [old_first_day_week, old_date]
-                                write_values.extend(calc_average_values(self.data['weekly_average']))
-                                write_values.append(old_city)
-                                output_file_weekly.write(transform_line_write(write_values))
-                                self.data['number_lines']['weekly'] += 1
-                                self.data['weekly_average'].clear()
+                                average_calc = calc_average_values(self.data['weekly_average'])
+                                if average_calc:
+                                    write_values.extend(average_calc)
+                                    write_values.append(old_city)
+                                    output_file_weekly.write(transform_line_write(write_values))
+                                    self.data['number_lines']['weekly'] += 1
+                                    self.data['weekly_average'].clear()
 
                             # média mensal
                             if old_competence != competence:
-                                average_values = [old_competence]
-                                average_values.extend(calc_average_values(self.data['monthly_average']))
-                                average_values.append(old_city)
-                                output_file_monthly.write(transform_line_write(average_values))
-                                self.data['number_lines']['monthly'] += 1
-                                self.data['monthly_average'].clear()
+                                average_calc = calc_average_values(self.data['monthly_average'])
+                                if average_calc:
+                                    average_values = [old_competence]
+                                    average_values.extend(average_calc)
+                                    average_values.append(old_city)
+                                    output_file_monthly.write(transform_line_write(average_values))
+                                    self.data['number_lines']['monthly'] += 1
+                                    self.data['monthly_average'].clear()
 
                         # salvar dados para médias diárias
                         values_to_average = [line.get(key) for key in line.keys() if key not in ['data', 'hora']]
