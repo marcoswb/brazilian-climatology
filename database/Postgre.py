@@ -8,7 +8,7 @@ db = PostgresqlDatabase(
     user=get_env('DATABASE_USER'),
     password=get_env('DATABASE_PASSWORD'),
     host=get_env('DATABASE_HOST'),
-    port=get_env('DATABASE_POST')
+    port=get_env('DATABASE_PORT')
 )
 
 

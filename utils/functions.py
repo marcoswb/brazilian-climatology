@@ -72,7 +72,7 @@ def calc_average_values_forecast(list_values):
             if index_sublist == 0:
                 sum_values_string.append(list_values[index_main_list][index_sublist])
             else:
-                sum_values += format_float(list_values[index_main_list][index_sublist])
+                sum_values += format_float(list_values[index_main_list][index_sublist], default_value=0)
 
         if index_sublist == 0:
             average.append(Counter(sum_values_string).most_common(1)[0][0])
