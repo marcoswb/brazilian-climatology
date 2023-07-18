@@ -1,4 +1,4 @@
-# TCC ADS
+# DataWarehouse de dados climáticos brasileiros 
 
 Para iniciar a aplicação é necessário ter os seguintes programas instalados na máquina:
 1. PostgreSQL;
