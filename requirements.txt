@@ -17,7 +17,7 @@ pycparser==2.21
 pyOpenSSL==23.1.1
 python-dotenv==1.0.0
 pytz==2023.3
-requests==2.30.0
+requests==2.31.0
 selenium==4.9.1
 six==1.16.0
 tqdm==4.65.0
